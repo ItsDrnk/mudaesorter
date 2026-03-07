@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mudae Sorter</title>
+
+<style>
+body {
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#111;
+  color:white;
+}
+
+/* Tabs */
+.tabs {
+  display:flex;
+  background:#222;
+}
+.tab {
+  padding:12px 20px;
+  cursor:pointer;
+  border-right:1px solid #333;
+}
+.tab.active {
+  background:#333;
+}
+
+.section {
+  display:none;
+  padding:20px;
+}
+.section.active {
+  display:block;
+}
+
+/* Inputs */
+textarea {
+  width:100%;
+  height:120px;
+  background:#1a1a1a;
+  color:white;
+  border:1px solid #444;
+  padding:10px;
+  resize:vertical;
+  box-sizing:border-box;
+  margin-top:10px;
+}
+
+button {
+  margin-top:10px;
+  padding:8px 16px;
+  background:#444;
+  border:none;
+  color:white;
+  cursor:pointer;
+}
+button:hover {
+  background:#666;
+}
+
+/* Main Grid */
+.grid {
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:20px;
+  align-content:flex-start;
+}
+
+/* Collapsible Sections */
+.collapsible-header {
+  background:#222;
+  border:1px solid #333;
+  padding:12px;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:15px;
+  user-select:none;
+}
+
+.collapsible-header:hover {
+  background:#2a2a2a;
+}
+
+.collapsible-header.expanded {
+  background:#333;
+}
+
+.collapsible-content {
+  display:none;
+  padding:15px;
+  border:1px solid #333;
+  border-top:none;
+  background:#1a1a1a;
+}
+
+.collapsible-content.expanded {
+  display:block;
+}
+
+.tile {
+  background:#222;
+  border:1px solid #333;
+  padding:6px;
+  cursor:grab;
+  position:relative;
+  user-select:none;
+}
+
+.tile img {
+  width:100%;
+  display:block;
+  pointer-events:none;
+}
+
+.tile-name {
+  margin-top:6px;
+  font-size:13px;
+  text-align:center;
+}
+
+.group-container {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  padding:12px;
+  padding-top:28px;
+  border-radius:6px;
+  position:relative;
+}
+
+.group-item {
+  display:inline-block;
+  position:relative;
+}
+
+.group-drag-handle {
+  position:absolute;
+  left:0;
+  top:-10px;
+  width:40px;
+  height:18px;
+  cursor:grab;
+  border-radius:3px 3px 0 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  opacity:0.9;
+  font-weight:bold;
+  user-select:none;
+  draggable:true;
+  min-width:max-content;
+  padding:0 6px;
+  white-space:nowrap;
+}
+
+.gallery-btn {
+  position:absolute;
+  bottom:6px;
+  right:6px;
+  background:#000c;
+  padding:3px 6px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+/* Modal */
+.modal {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+
+.modal-content {
+  background:#111;
+  width:90%;
+  max-width:1000px;
+  max-height:85vh;
+  overflow:auto;
+  padding:20px;
+  box-sizing:border-box;
+  border:1px solid #444;
+  scrollbar-width:none;
+}
+
+.modal-content::-webkit-scrollbar {
+  display:none;
+}
+
+/* Gallery Grid */
+.gallery-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:10px;
+  margin-top:15px;
+}
+
+.gallery-grid img {
+  width:100%;
+  height:auto;
+  cursor:pointer;
+  border:1px solid #333;
+}
+.gallery-grid img:hover {
+  border-color:white;
+}
+
+.wishlist-item {
+  background:#1c1c1c;
+  border:1px solid #333;
+  padding:8px;
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:grab;
+}
+
+.wishlist-controls button {
+  margin-left:4px;
+  padding:3px 6px;
+  font-size:12px;
+}
+
+.boost-info {
+  font-size:12px;
+  opacity:0.7;
+  margin-left:10px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)">Sorter</div>
+  <div class="tab" onclick="switchTab(1)">Wishlist</div>
+</div>
+
+<!-- Sorter -->
+<div class="section active">
+  <div class="collapsible-header" onclick="toggleCollapsible(this)">
+    <span>▶ Load/Generate Grid</span>
+  </div>
+  <div class="collapsible-content">
+    <textarea id="listInput" placeholder="Rem | 🕺 - https://link.png"></textarea>
+    <button onclick="generateGrid()">1st Generate Grid</button>
+    <button onclick="generateCommand()">Generate Commands</button>
+  </div>
+
+  <div class="collapsible-header" onclick="toggleCollapsible(this)">
+    <span>▶ Groups</span>
+  </div>
+  <div class="collapsible-content">
+    <div style="display:flex; gap:10px; margin-bottom:10px;">
+      <input type="text" id="groupNameInput" placeholder="Group name (e.g., rezero)" style="flex:1; background:#1a1a1a; color:white; border:1px solid #444; padding:8px;">
+      <input type="color" id="groupColorInput" value="#444444" style="width:50px; height:32px; cursor:pointer;">
+      <button onclick="createGroup()">Create Group</button>
+    </div>
+    <div id="groupsContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div>
+  </div>
+
+  <div class="collapsible-header" onclick="toggleCollapsible(this)">
+    <span>▶ Add New Characters</span>
+  </div>
+  <div class="collapsible-content">
+    <textarea id="addNewInput" placeholder="Paste your full list here - duplicates will be ignored"></textarea>
+    <button onclick="addNewCharacters()">Add New Characters Only</button>
+  </div>
+
+  <div class="collapsible-header" onclick="toggleCollapsible(this)">
+    <span>▶ $sortmarry Command</span>
+  </div>
+  <div class="collapsible-content">
+    <button onclick="copySort()">Copy $sortmarry</button>
+    <textarea id="sortOutput" readonly></textarea>
+  </div>
+
+  <div class="collapsible-header" onclick="toggleCollapsible(this)">
+    <span>▶ $ci Commands</span>
+  </div>
+  <div class="collapsible-content">
+    <div id="ciContainer"></div>
+    <div id="ciProgress" style="margin-top:8px; opacity:0.8;"></div>
+    <button onclick="copyNextCi()">Copy Next CI</button>
+  </div>
+
+<hr style="margin:20px 0; border-color:#333;">
+
+  <button onclick="undoGrid()">↶ Undo (Ctrl+Z)</button>
+  <button onclick="redoGrid()">↷ Redo (Ctrl+Shift+Z)</button>
+  <button onclick="saveProfile()">💾 Save Profile</button>
+  <button onclick="document.getElementById('loadInput').click()">📂 Load Profile</button>
+  <button onclick="clearGalleryCache(); alert('Gallery cache cleared!')">🗑️ Clear Image Cache</button>
+<input type="file" id="loadInput" accept=".json" style="display:none" onchange="loadProfile(event)">
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- Wishlist -->
+<div class="section">
+  <textarea id="wishlistInput" placeholder="Paste wishlist here..."></textarea>
+  <button onclick="parseWishlist()">Parse Wishlist</button>
+  <button onclick="generateWishlistCommands()">Generate Wishlist Commands</button>
+  <div id="wishlistSummary" style="margin-top:15px; font-weight:bold;"></div>
+  <textarea id="wishlistOutput" style="height:120px; margin-top:10px;" readonly></textarea>
+
+  <!-- Wishlist Commands UI -->
+  <div id="wishlistCommandsBox" style="margin-top:12px; border:1px solid #333; padding:12px; background:#151515;">
+    <div style="font-weight:bold; margin-bottom:8px;">Wishlist Commands (steps)</div>
+    <div id="wishlistCommandContainer"></div>
+    <div id="wishlistProgress" style="margin-top:8px; opacity:0.8;"></div>
+    <ol id="wishlistSteps" style="margin-top:8px; padding-left:18px; color:#ddd;"></ol>
+    <button onclick="copyNextWishlistCommand()" style="margin-top:8px;">Copy Next Wishlist Command</button>
+  </div>
+
+  <!-- Character Search/Add UI -->
+  <div id="wishlistAddCharBox" style="margin-top:18px; border:1px solid #333; padding:12px; background:#181818;">
+    <div style="font-weight:bold; margin-bottom:8px;">Add Character to Wishlist</div>
+    <input type="text" id="wishlistCharSearchInput" placeholder="Type character name..." style="width:60%; padding:6px; background:#222; color:#fff; border:1px solid #444;">
+    <button onclick="searchWishlistCharacter()" style="margin-left:8px;">Search</button>
+    <div id="wishlistCharSearchResults" style="margin-top:12px;"></div>
+  </div>
+
+  <div id="wishlistContainer" style="margin-top:20px;"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="galleryModal">
+  <div class="modal-content">
+    <h3 id="modalTitle"></h3>
+    <div class="gallery-grid" id="galleryContainer"></div>
+    <button onclick="closeGallery()" style="position:absolute; top:15px; left:50%; transform:translateX(-50%); width:30px; height:30px; padding:0; font-size:20px;">✕</button>
+  </div>
+</div>
+
+<script>
+let items = [];
+let draggedIndex = null;
+let selectedImages = {};
+let galleryCache = {};
+let activeTileIndex = null;
+let ciList = [];
+let ciIndex = 0;
+let wishlistCommandList = [];
+let wishlistCommandIndex = 0;
+let groups = [];
+let nextGroupId = 0;
+let draggedGroup = null;
+let draggedGroupContainer = null;
+
+// Undo/Redo stacks for grid only
+let undoStack = [];
+let redoStack = [];
+const MAX_HISTORY = 100;
+
+function captureGridSnapshot(){
+  return {
+    items: JSON.parse(JSON.stringify(items)),
+    groups: JSON.parse(JSON.stringify(groups)),
+    selectedImages: JSON.parse(JSON.stringify(selectedImages))
+  };
+}
+
+function pushGridState(){
+  try{
+    undoStack.push(captureGridSnapshot());
+    if(undoStack.length > MAX_HISTORY) undoStack.shift();
+    // clear redo on new action
+    redoStack = [];
+  }catch(e){console.log('pushGridState error',e);}  
+}
+
+function applyGridSnapshot(snapshot){
+  if(!snapshot) return;
+  items = JSON.parse(JSON.stringify(snapshot.items || []));
+  groups = JSON.parse(JSON.stringify(snapshot.groups || []));
+  selectedImages = JSON.parse(JSON.stringify(snapshot.selectedImages || {}));
+  renderGrid();
+}
+
+function undoGrid(){
+  if(undoStack.length === 0) return;
+  // push current state to redo
+  redoStack.push(captureGridSnapshot());
+  const prev = undoStack.pop();
+  applyGridSnapshot(prev);
+  autosave();
+}
+
+function redoGrid(){
+  if(redoStack.length === 0) return;
+  undoStack.push(captureGridSnapshot());
+  const next = redoStack.pop();
+  applyGridSnapshot(next);
+  autosave();
+}
+
+// keyboard shortcuts
+document.addEventListener('keydown', function(e){
+  if((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z'){
+    e.preventDefault(); undoGrid();
+  }
+  if((e.ctrlKey || e.metaKey) && (e.shiftKey) && e.key.toLowerCase() === 'z'){
+    e.preventDefault(); redoGrid();
+  }
+});
+
+/* Load gallery cache from localStorage */
+function loadGalleryCache(){
+  const cached = localStorage.getItem("mudae-gallery-cache");
+  if(cached){
+    try{
+      galleryCache = JSON.parse(cached);
+    }catch(err){
+      galleryCache = {};
+    }
+  }
+}
+
+/* Save gallery cache to localStorage */
+function saveGalleryCache(){
+  localStorage.setItem("mudae-gallery-cache", JSON.stringify(galleryCache));
+}
+
+function clearGalleryCache(){
+  galleryCache = {};
+  localStorage.removeItem("mudae-gallery-cache");
+}
+
+/* Tabs */
+function switchTab(i){
+  document.querySelectorAll(".tab").forEach((t,idx)=>{
+    t.classList.toggle("active",idx===i);
+  });
+  document.querySelectorAll(".section").forEach((s,idx)=>{
+    s.classList.toggle("active",idx===i);
+  });
+}
+
+/* Collapsible Sections */
+function toggleCollapsible(header){
+  header.classList.toggle("expanded");
+  const content = header.nextElementSibling;
+  content.classList.toggle("expanded");
+  
+  const span = header.querySelector("span");
+  span.textContent = header.classList.contains("expanded") ? span.textContent.replace("▶", "▼") : span.textContent.replace("▼", "▶");
+}
+
+/* Grid */
+function generateGrid(){
+  const raw = document
+    .getElementById("listInput")
+    .value
+    .trim()
+    .split("\n");
+
+  pushGridState();
+  items = [];
+  selectedImages = {};
+
+  raw.forEach(line => {
+    if (!line.trim()) return;
+
+    let namePart = line;
+    let image = null;
+
+    const dashIndex = line.indexOf(" - ");
+
+    if (dashIndex !== -1) {
+      namePart = line.substring(0, dashIndex).trim();
+      image = line.substring(dashIndex + 3).trim();
+    }
+
+    items.push({
+      name: namePart,
+      image: image || null
+    });
+  });
+
+  autosave();
+  renderGrid();
+}
+
+function renderGrid(){
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
+  
+  // Add drop handlers to grid for group reordering
+  grid.ondragover = (e) => {
+    if(draggedGroup !== null){
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+    }
+  };
+  
+  grid.ondrop = (e) => {
+    if(draggedGroup !== null){
+      e.preventDefault();
+      draggedGroup = null;
+      draggedGroupContainer = null;
+    }
+  };
+  
+  // Create a map of items by group
+  const groupedItems = new Map();
+  const ungroupedItems = [];
+  
+  items.forEach((item, index) => {
+    const group = getGroupForItem(index);
+    if(group){
+      if(!groupedItems.has(group.id)){
+        groupedItems.set(group.id, []);
+      }
+      groupedItems.get(group.id).push({item, index});
+    } else {
+      ungroupedItems.push({item, index});
+    }
+  });
+  
+  // Render grouped items
+  groups.forEach(group => {
+    const groupIndices = groupedItems.get(group.id);
+    if(!groupIndices) return;
+    
+    const container = document.createElement("div");
+    container.className = "group-container";
+    container.style.background = group.color + "20";
+    container.style.border = `2px solid ${group.color}`;
+    container.style.position = "relative";
+    
+  // Add drag handle at top
+    const handle = document.createElement("div");
+    handle.className = "group-drag-handle";
+    handle.textContent = "⋮ " + group.name;
+    handle.style.background = group.color;
+    handle.draggable = true;
+    handle.ondragstart = (e) => {
+      draggedGroup = group.id;
+      draggedGroupContainer = container;
+      e.dataTransfer.effectAllowed = "move";
+    };
+    handle.ondragend = () => {
+      draggedGroup = null;
+      draggedGroupContainer = null;
+    };
+    container.appendChild(handle);
+    
+    groupIndices.forEach(({item, index}) => {
+      const tile = createTile(item, index, group);
+      container.appendChild(tile);
+    });
+    
+    // Make container itself draggable via the handle
+    container.ondragover = (e) => {
+      e.preventDefault();
+      if(draggedGroup === group.id && draggedGroupContainer){
+        container.style.opacity = "0.5";
+      }
+      e.dataTransfer.dropEffect = "move";
+    };
+    
+    container.ondragleave = () => {
+      container.style.opacity = "1";
+    };
+    
+    container.ondrop = (e) => {
+      e.preventDefault();
+      container.style.opacity = "1";
+      
+      if(draggedGroup === group.id && draggedGroupContainer){
+        // Moving the group within itself - do nothing
+        return;
+      }
+      
+      if(draggedIndex !== null){
+        const movedGroup = getGroupForItem(draggedIndex);
+        
+        // Remove from old group if exists
+        if(movedGroup){
+          movedGroup.memberIndices = movedGroup.memberIndices.filter(i => i !== draggedIndex);
+        }
+        
+        // Add to this group
+        if(!group.memberIndices.includes(draggedIndex)){
+          group.memberIndices.push(draggedIndex);
+        }
+        
+        draggedIndex = null;
+        autosave();
+        renderGrid();
+      }
+    };
+    
+    grid.appendChild(container);
+  });
+  
+  // Render ungrouped items normally
+  ungroupedItems.forEach(({item, index}) => {
+    const tile = createTile(item, index, null);
+    grid.appendChild(tile);
+  });
+}
+
+function createTile(item, index, group){
+  const tile = document.createElement("div");
+  tile.className = "tile";
+  tile.draggable = true;
+  tile.dataset.index = index;
+  tile.style.width = "140px";
+  
+  if(group){
+    tile.style.borderColor = group.color;
+    tile.style.borderWidth = "2px";
+    tile.style.boxShadow = `0 0 6px ${group.color}40`;
+  }
+
+  tile.ondragstart = (e) => {
+    // capture state before user starts moving a tile
+    pushGridState();
+    draggedIndex = index;
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", tile.innerHTML);
+  };
+  
+  tile.ondragover = (e) => {
+    e.preventDefault();
+    const target = Number(e.currentTarget.dataset.index);
+    
+    // Show preview
+    if(draggedIndex !== null && draggedIndex !== target){
+      // Fade out the target tile slightly
+      e.currentTarget.style.opacity = "0.6";
+      
+      // Create and show preview of dragged tile
+      if(!e.currentTarget.querySelector(".drag-preview")){
+        const preview = document.createElement("div");
+        preview.className = "drag-preview";
+        preview.style.position = "absolute";
+        preview.style.top = "0";
+        preview.style.left = "0";
+        preview.style.opacity = "0.4";
+        preview.style.pointerEvents = "none";
+        preview.innerHTML = e.dataTransfer.getData("text/html");
+        e.currentTarget.style.position = "relative";
+        e.currentTarget.appendChild(preview);
+      }
+    }
+    e.dataTransfer.dropEffect = "move";
+  };
+  
+  tile.ondragleave = (e) => {
+    e.currentTarget.style.opacity = "1";
+    const preview = e.currentTarget.querySelector(".drag-preview");
+    if(preview){
+      preview.remove();
+    }
+  };
+  
+  tile.ondrop = (e) => {
+    e.currentTarget.style.opacity = "1";
+    const preview = e.currentTarget.querySelector(".drag-preview");
+    if(preview){
+      preview.remove();
+    }
+    e.preventDefault();
+    const target = Number(e.currentTarget.dataset.index);
+    const moved = items.splice(draggedIndex, 1)[0];
+    items.splice(target, 0, moved);
+    draggedIndex = null;
+    autosave();
+    renderGrid();
+  };
+
+  if(item.image){
+    const img = document.createElement("img");
+    img.src = item.image;
+    tile.appendChild(img);
+  }
+
+  const nameDiv = document.createElement("div");
+  nameDiv.className = "tile-name";
+  nameDiv.textContent = item.name;
+  tile.appendChild(nameDiv);
+
+  const btn = document.createElement("div");
+  btn.className = "gallery-btn";
+  btn.textContent = "🖼";
+  btn.onclick = (e) => { 
+    e.stopPropagation(); 
+    openGallery(index); 
+  };
+  tile.appendChild(btn);
+  
+  // Right click menu for groups
+  tile.oncontextmenu = (e) => {
+    e.preventDefault();
+    if(groups.length === 0) return;
+    
+    let menu = `Select a group:\n`;
+    groups.forEach((g, i) => {
+      menu += `${i+1}. ${g.name}\n`;
+    });
+    menu += `0. Remove from group`;
+    
+    const choice = prompt(menu);
+    if(choice === null) return;
+    
+    const num = parseInt(choice);
+    if(num === 0){
+      removeFromGroup(index);
+    } else if(num > 0 && num <= groups.length){
+      addToGroup(index, groups[num-1].id);
+    }
+  };
+  
+  return tile;
+}
+
+/* Generate Commands */
+function generateCommand(){
+  let sort="$sortmarry ";
+  ciList=[];
+  ciIndex=0;
+
+  items.forEach(item=>{
+    const clean=item.name.split("|")[0].trim();
+    sort+=clean+"$";
+
+    if(selectedImages[clean]){
+      ciList.push(`$ci ${clean} $${selectedImages[clean]}`);
+    }
+  });
+
+  document.getElementById("sortOutput").value=sort.trim();
+  renderCiButtons();
+}
+
+function renderCiButtons(){
+  const container=document.getElementById("ciContainer");
+  container.innerHTML="";
+
+  ciList.forEach((cmd,i)=>{
+    const btn=document.createElement("button");
+    btn.textContent=cmd;
+    btn.style.display="block";
+    btn.style.width="100%";
+    btn.style.marginBottom="6px";
+    btn.dataset.index=i;
+
+    btn.onclick=()=>{
+      navigator.clipboard.writeText(cmd);
+      flashButton(btn);
+      ciIndex=i+1;
+      updateCiProgress();
+      highlightCurrent();
+    };
+
+    container.appendChild(btn);
+  });
+
+  highlightCurrent();
+  updateCiProgress();
+}
+
+function copyNextCi(){
+  if(ciIndex>=ciList.length) return;
+
+  navigator.clipboard.writeText(ciList[ciIndex]);
+
+  const buttons=document.querySelectorAll("#ciContainer button");
+  const currentBtn=buttons[ciIndex];
+
+  if(currentBtn){
+    flashButton(currentBtn);
+  }
+
+  ciIndex++;
+  highlightCurrent();
+  updateCiProgress();
+}
+
+function flashButton(btn){
+  btn.style.background="#2ecc71";
+  setTimeout(()=>{
+    btn.style.background="";
+  },200);
+}
+
+function highlightCurrent(){
+  const buttons=document.querySelectorAll("#ciContainer button");
+
+  buttons.forEach((btn,i)=>{
+    if(i===ciIndex){
+      btn.style.outline="2px solid #00bfff";
+    }else{
+      btn.style.outline="none";
+    }
+  });
+}
+
+function updateCiProgress(){
+  const progress=document.getElementById("ciProgress");
+  progress.textContent=`Progress: ${ciIndex} / ${ciList.length}`;
+}
+
+/* Copy */
+function copySort(){ copyText("sortOutput"); }
+function copyCi(){ copyText("ciOutput"); }
+
+function copyText(id){
+  const el=document.getElementById(id);
+  if(!el.value) return;
+  el.select();
+  document.execCommand("copy");
+}
+
+/* Gallery with rotating proxies */
+async function openGallery(index){
+  activeTileIndex=index;
+  const name=items[index].name.split("|")[0].trim();
+
+  document.getElementById("galleryModal").style.display="flex";
+  document.getElementById("modalTitle").textContent="Loading "+name+"...";
+  document.getElementById("galleryContainer").innerHTML="Loading...";
+
+  if(galleryCache[name]){
+    buildGallery(galleryCache[name]);
+    return;
+  }
+
+  const encoded = encodeURIComponent(name);
+  const targetURL = `https://mudae.net/character/${encoded}`;
+
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${targetURL}`,
+    `https://api.codetabs.com/v1/proxy?quest=${targetURL}`,
+    `https://corsproxy.io/?${targetURL}`
+  ];
+
+  let html = null;
+
+  for(let proxy of proxies){
+    try{
+      const resp = await fetch(proxy);
+      const text = await resp.text();
+      if(text.includes("/uploads/")){
+        html = text;
+        break;
+      }
+    }catch(e){}
+  }
+
+  if(!html){
+    document.getElementById("galleryContainer").innerHTML="Failed to load gallery.";
+    return;
+  }
+
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(html,"text/html");
+
+  let images=[...doc.querySelectorAll("img")]
+    .map(img=>img.src)
+    .filter(src=>src.includes("/uploads/"));
+
+  images=[...new Set(images)];
+
+  if(images.length===0){
+    document.getElementById("galleryContainer").innerHTML="No images found.";
+    return;
+  }
+
+  galleryCache[name]=images;
+  saveGalleryCache();
+  buildGallery(images);
+}
+
+function buildGallery(images){
+  const container=document.getElementById("galleryContainer");
+  container.innerHTML="";
+
+  images.forEach((src,i)=>{
+    const img=document.createElement("img");
+    img.src=src;
+    img.onclick=()=>{
+      pushGridState();
+      const clean=items[activeTileIndex].name.split("|")[0].trim();
+      selectedImages[clean]=i+1;
+      items[activeTileIndex].image=src;
+      autosave();
+      closeGallery();
+      renderGrid();
+    };
+    container.appendChild(img);
+  });
+}
+
+function closeGallery(){
+  document.getElementById("galleryModal").style.display="none";
+}
+document.addEventListener("keydown",function(e){
+  if(e.key.toLowerCase()==="n"){
+    copyNextCi();
+  }
+});
+
+function saveProfile(){
+  const data = {
+    items: items,
+    selectedImages: selectedImages
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    {type:"application/json"}
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mudae-profile.json";
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  autosave();
+}
+
+function loadProfile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const data = JSON.parse(e.target.result);
+
+    items = data.items || [];
+    selectedImages = data.selectedImages || {};
+    wishlist = data.wishlist || [];
+    groups = data.groups || [];
+    nextGroupId = data.nextGroupId || 0;
+
+    renderGrid();
+    renderGroups();
+    renderWishlist();
+    renderCiButtons();
+    updateCiProgress();
+    
+    autosave();
+  };
+  reader.readAsText(file);
+}
+
+/* ================= WISHLIST SYSTEM ================= */
+
+let wishlist = [];
+let draggedWishIndex = null;
+
+function parseWishlist(){
+  const raw=document.getElementById("wishlistInput").value.trim().split("\n");
+  wishlist=[];
+
+  raw.forEach(line=>{
+    if(!line.trim()) return;
+
+    let name=line.replace(/⭐|✅|❌|\+\d+%/g,"").trim();
+
+    wishlist.push({
+      name,
+      star:line.includes("⭐"),
+      owned:line.includes("✅"),
+      sphereLevel:0
+    });
+  });
+
+  autosave();
+  renderWishlist();
+}
+
+function renderWishlist(){
+function calculateWishlistSummary(){
+  const len = wishlist.length;
+  let totalReceived = 0;
+  let totalGiven = 0;
+
+  wishlist.forEach((char, index) => {
+    const prev = wishlist[(index - 1 + len) % len];
+    const next = wishlist[(index + 1) % len];
+
+    const received = ((prev?.sphereLevel || 0) + (next?.sphereLevel || 0)) * 15;
+    const given = char.sphereLevel * 15;
+
+    totalReceived += received;
+    totalGiven += given;
+  });
+
+  document.getElementById("wishlistSummary").textContent =
+    `Total Received Boost: +${totalReceived}% | Total Given Boost: +${totalGiven}%`;
+}
+  const container=document.getElementById("wishlistContainer");
+  container.innerHTML="";
+  const len=wishlist.length;
+
+  wishlist.forEach((char,index)=>{
+    const div=document.createElement("div");
+    div.className="wishlist-item";
+    div.draggable=true;
+
+    div.ondragstart=e=>draggedWishIndex=index;
+    div.ondragover=e=>e.preventDefault();
+    div.ondrop=e=>{
+      const moved=wishlist.splice(draggedWishIndex,1)[0];
+      wishlist.splice(index,0,moved);
+      autosave();
+      renderWishlist();
+    };
+
+    const prev=wishlist[(index-1+len)%len];
+    const next=wishlist[(index+1)%len];
+
+    const received=((prev?.sphereLevel||0)+(next?.sphereLevel||0))*15;
+    const given=char.sphereLevel*15;
+
+    const left=document.createElement("div");
+    left.innerHTML=`
+      <strong>${char.name}</strong>
+      <div class="boost-info">
+      ${char.owned ? "Owned ✅ | " : ""}
+      Receives: +${received}% |
+      Gives: +${given}% |
+      Sphere: ${char.sphereLevel}/5
+      </div>
+    `;
+
+    const controls=document.createElement("div");
+    controls.className="wishlist-controls";
+
+    const starBtn=document.createElement("button");
+    starBtn.textContent=char.star?"⭐":"☆";
+    starBtn.onclick=()=>{
+      char.star = !char.star;
+      autosave();
+      renderWishlist();
+    };
+
+    const ownedBtn=document.createElement("button");
+    ownedBtn.textContent=char.owned?"✅":"❌";
+    ownedBtn.onclick=()=>{char.owned=!char.owned;autosave();renderWishlist();};
+
+    const minus=document.createElement("button");
+    minus.textContent="-";
+    minus.onclick=()=>{if(char.sphereLevel>0)char.sphereLevel--;autosave();renderWishlist();};
+
+    const plus=document.createElement("button");
+    plus.textContent="+";
+    plus.onclick=()=>{if(char.sphereLevel<5)char.sphereLevel++;autosave();renderWishlist();};
+
+    const removeBtn=document.createElement("button");
+    removeBtn.textContent="🗑";
+    removeBtn.title="Remove from wishlist";
+    removeBtn.style.background="#c00";
+    removeBtn.style.color="#fff";
+    removeBtn.onclick=()=>{
+      wishlist.splice(index,1);
+      autosave();
+      renderWishlist();
+    };
+
+    controls.appendChild(starBtn);
+    controls.appendChild(ownedBtn);
+    controls.appendChild(minus);
+    controls.appendChild(plus);
+    controls.appendChild(removeBtn);
+
+    div.appendChild(left);
+    div.appendChild(controls);
+    container.appendChild(div);
+  });
+  
+  calculateWishlistSummary();  
+}
+
+function generateWishlistCommands(){
+  if(wishlist.length === 0) return;
+
+  // Step 1: $swr everything that is starwished
+  const starwished = wishlist.filter(c => c.star).map(c => c.name);
+  // Step 2: $wr everything
+  const allNames = wishlist.map(c => c.name);
+  // Step 3: $wish everything again (including new stuff)
+  // Step 4: $sw everything that is starwished
+  // Step 5: $wishi order everything how it should be
+
+  wishlistCommandList = [];
+  if(starwished.length > 0)
+    wishlistCommandList.push("$swr " + starwished.join("$") + "$");
+  wishlistCommandList.push("$wr " + allNames.join("$") + "$" );
+  wishlistCommandList.push("$wish " + allNames.join("$") + "$" );
+  if(starwished.length > 0)
+    wishlistCommandList.push("$sw " + starwished.join("$") + "$" );
+  wishlistCommandList.push("$wishi " + allNames.join("$") + "$" );
+
+  wishlistCommandIndex = 0;
+  renderWishlistCommands();
+  calculateWishlistSummary();
+}
+
+function renderWishlistCommands(){
+  const container = document.getElementById("wishlistCommandContainer");
+  const stepsEl = document.getElementById("wishlistSteps");
+  container.innerHTML = "";
+  stepsEl.innerHTML = "";
+
+  wishlistCommandList.forEach((cmd, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = cmd;
+    btn.style.display = "block";
+    btn.style.width = "100%";
+    btn.style.marginBottom = "6px";
+    btn.dataset.index = i;
+
+    btn.onclick = () => {
+      navigator.clipboard.writeText(cmd);
+      wishlistCommandIndex = i + 1;
+      highlightWishlistCommand();
+      updateWishlistProgress();
+      flashButton(btn);
+    };
+
+    container.appendChild(btn);
+
+    const li = document.createElement("li");
+    li.textContent = `${cmd} — Click the button above to copy and paste into chat.`;
+    li.style.marginBottom = "6px";
+    stepsEl.appendChild(li);
+  });
+
+  highlightWishlistCommand();
+  updateWishlistProgress();
+}
+
+function copyNextWishlistCommand(){
+  if(wishlistCommandIndex >= wishlistCommandList.length) return;
+
+  const cmd = wishlistCommandList[wishlistCommandIndex];
+  navigator.clipboard.writeText(cmd);
+
+  const buttons = document.querySelectorAll("#wishlistCommandContainer button");
+  const currentBtn = buttons[wishlistCommandIndex];
+  if(currentBtn) flashButton(currentBtn);
+
+  wishlistCommandIndex++;
+  highlightWishlistCommand();
+  updateWishlistProgress();
+}
+
+function highlightWishlistCommand(){
+  const buttons = document.querySelectorAll("#wishlistCommandContainer button");
+  const lis = document.querySelectorAll("#wishlistSteps li");
+
+  buttons.forEach((btn, i) => {
+    btn.style.outline = (i === wishlistCommandIndex) ? "2px solid #00bfff" : "none";
+  });
+
+  lis.forEach((li, i) => {
+    li.style.fontWeight = (i === wishlistCommandIndex) ? "700" : "400";
+  });
+}
+
+function updateWishlistProgress(){
+  const progress = document.getElementById("wishlistProgress");
+  progress.textContent = `Progress: ${wishlistCommandIndex} / ${wishlistCommandList.length}`;
+}
+
+/* Extend Save WITHOUT breaking original */
+
+const oldSaveProfile = saveProfile;
+saveProfile = function(){
+  const data = {
+    items: items,
+    selectedImages: selectedImages,
+    wishlist: wishlist,
+    groups: groups,
+    nextGroupId: nextGroupId
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    {type:"application/json"}
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mudae-profile.json";
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  autosave();
+};
+
+const oldLoadProfile = loadProfile;
+loadProfile = function(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const data = JSON.parse(e.target.result);
+
+    items = data.items || [];
+    selectedImages = data.selectedImages || {};
+    wishlist = data.wishlist || [];
+    groups = data.groups || [];
+    nextGroupId = data.nextGroupId || 0;
+
+    renderGrid();
+    renderGroups();
+    renderWishlist();
+    renderCiButtons();
+    updateCiProgress();
+    
+    autosave();
+  };
+  reader.readAsText(file);
+};
+
+/* ================= AUTOSAVE SYSTEM ================= */
+
+function autosave(){
+  const data = {
+    items: items,
+    selectedImages: selectedImages,
+    wishlist: wishlist,
+    groups: groups,
+    nextGroupId: nextGroupId
+  };
+  localStorage.setItem("mudae-autosave", JSON.stringify(data));
+}
+
+function loadAutosave(){
+  const saved = localStorage.getItem("mudae-autosave");
+  if(saved){
+    try{
+      const data = JSON.parse(saved);
+      items = data.items || [];
+      selectedImages = data.selectedImages || {};
+      wishlist = data.wishlist || [];
+      groups = data.groups || [];
+      nextGroupId = data.nextGroupId || 0;
+      
+      renderGrid();
+      renderGroups();
+      renderWishlist();
+      renderCiButtons();
+      updateCiProgress();
+    }catch(err){
+      console.log("Autosave load failed");
+    }
+  }
+}
+
+function clearAutosave(){
+  localStorage.removeItem("mudae-autosave");
+}
+
+/* ================= ADD NEW CHARACTERS ================= */
+
+function addNewCharacters(){
+  const raw = document.getElementById("addNewInput").value.trim().split("\n");
+  pushGridState();
+  const existingNames = items.map(item => item.name.split("|")[0].trim().toLowerCase());
+  let added = 0;
+  raw.forEach(line => {
+    if(!line.trim()) return;
+    let namePart = line;
+    let image = null;
+    const dashIndex = line.indexOf(" - ");
+    if(dashIndex !== -1){
+      namePart = line.substring(0, dashIndex).trim();
+      image = line.substring(dashIndex + 3).trim();
+    }
+    const cleanName = namePart.split("|")[0].trim().toLowerCase();
+    // Only add if not already in list
+    if(!existingNames.includes(cleanName)){
+      items.push({
+        name: namePart,
+        image: image || null
+      });
+      added++;
+    }
+  });
+  
+  alert(`Added ${added} new character${added !== 1 ? 's' : ''}`);
+  renderGrid();
+  autosave();
+}
+
+// Load autosave and gallery cache on page load
+window.addEventListener("DOMContentLoaded", function(){
+  loadGalleryCache();
+  loadAutosave();
+  // capture initial grid state for undo baseline
+  undoStack = [];
+  redoStack = [];
+  pushGridState();
+});
+
+/* ================= GROUP SYSTEM ================= */
+
+function createGroup(){
+  const name = document.getElementById("groupNameInput").value.trim();
+  const color = document.getElementById("groupColorInput").value;
+  
+  if(!name){
+    alert("Please enter a group name");
+    return;
+  }
+  pushGridState();
+
+  groups.push({
+    id: nextGroupId++,
+    name: name,
+    color: color,
+    memberIndices: []
+  });
+  
+  document.getElementById("groupNameInput").value = "";
+  document.getElementById("groupColorInput").value = "#444444";
+  
+  renderGroups();
+  autosave();
+}
+
+function renderGroups(){
+  const container = document.getElementById("groupsContainer");
+  container.innerHTML = "";
+  
+  groups.forEach(group => {
+    const div = document.createElement("div");
+    div.style.cssText = `
+      background:${group.color}40;
+      border:2px solid ${group.color};
+      border-radius:6px;
+      padding:8px 12px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    `;
+    
+    const label = document.createElement("span");
+    label.textContent = `${group.name} (${group.memberIndices.length})`;
+    label.style.cssText = "flex:1; font-weight:bold;";
+    
+    const colorBtn = document.createElement("button");
+    colorBtn.textContent = "🎨";
+    colorBtn.style.cssText = "padding:2px 6px; font-size:12px;";
+    colorBtn.onclick = () => {
+      const newColor = prompt("Enter color (hex):", group.color);
+      if(newColor){
+        group.color = newColor;
+        renderGroups();
+        renderGrid();
+        autosave();
+        pushGridState();
+      }
+    };
+    
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "✕";
+    deleteBtn.style.cssText = "padding:2px 6px; font-size:12px; background:#c00;";
+    deleteBtn.onclick = () => {
+      pushGridState();
+      groups = groups.filter(g => g.id !== group.id);
+      renderGroups();
+      renderGrid();
+      autosave();
+    };
+    
+    div.appendChild(label);
+    div.appendChild(colorBtn);
+    div.appendChild(deleteBtn);
+    container.appendChild(div);
+  });
+}
+
+function addToGroup(itemIndex, groupId){
+  const group = groups.find(g => g.id === groupId);
+  if(!group) return;
+  pushGridState();
+
+  if(!group.memberIndices.includes(itemIndex)){
+    group.memberIndices.push(itemIndex);
+    autosave();
+    renderGrid();
+  }
+}
+
+function removeFromGroup(itemIndex){
+  pushGridState();
+  groups.forEach(group => {
+    group.memberIndices = group.memberIndices.filter(i => i !== itemIndex);
+  });
+  autosave();
+  renderGrid();
+}
+
+function getGroupForItem(itemIndex){
+  return groups.find(g => g.memberIndices.includes(itemIndex));
+}
+
+window.searchWishlistCharacter = function() {
+  const name = document.getElementById("wishlistCharSearchInput").value.trim();
+  const resultsBox = document.getElementById("wishlistCharSearchResults");
+  resultsBox.innerHTML = "Searching...";
+  if (!name) {
+    resultsBox.innerHTML = "Please enter a character name.";
+    return;
+  }
+
+  // Use Mudae's site and proxies to fetch character page
+  const encoded = encodeURIComponent(name);
+  const targetURL = `https://mudae.net/character/${encoded}`;
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${targetURL}`,
+    `https://api.codetabs.com/v1/proxy?quest=${targetURL}`,
+    `https://corsproxy.io/?${targetURL}`
+  ];
+
+  let found = false;
+  (async () => {
+    for (let proxy of proxies) {
+      try {
+        const resp = await fetch(proxy);
+        const text = await resp.text();
+        if (text.includes("/uploads/")) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, "text/html");
+          let images = [...doc.querySelectorAll("img")]
+            .map(img => img.src)
+            .filter(src => src.includes("/uploads/"));
+          images = [...new Set(images)];
+
+          // Get official name from site
+          let officialName = name;
+          const nameElem = doc.querySelector(".character-title, h1, .title, .name");
+          if (nameElem && nameElem.textContent) {
+            officialName = nameElem.textContent.trim();
+          } else {
+            // fallback: try page title
+            const pageTitle = doc.querySelector("title");
+            if(pageTitle && pageTitle.textContent) {
+              officialName = pageTitle.textContent.replace(/ - Mudae.*/,"").trim();
+            }
+          }
+
+          resultsBox.innerHTML = "";
+          if (images.length === 0) {
+            resultsBox.innerHTML = "No images found.";
+            return;
+          }
+
+          // Only show the first image
+          const src = images[0];
+          const img = document.createElement("img");
+          img.src = src;
+          img.style.width = "120px";
+          img.style.margin = "6px";
+          img.style.border = "2px solid #333";
+          img.style.cursor = "pointer";
+          img.title = `Select this image for '${officialName}'`;
+          img.onclick = () => {
+            wishlist.push({
+              name: officialName,
+              star: false,
+              owned: false,
+              sphereLevel: 0,
+              image: src
+            });
+            autosave();
+            renderWishlist();
+            resultsBox.innerHTML = `<span style='color:#2ecc71'>Added '${officialName}' to wishlist!</span>`;
+          };
+          resultsBox.appendChild(img);
+
+          found = true;
+          break;
+        }
+      } catch (e) {}
+    }
+    if (!found) resultsBox.innerHTML = "No results found or failed to fetch.";
+  })();
+}
+</script>
+
+</body>
+</html>

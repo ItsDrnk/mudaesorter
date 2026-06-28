@@ -76,7 +76,7 @@ All data is saved to your **browser's localStorage** automatically — nothing i
 
 ---
 
-## 🤖 AutoHotkey Setup (for Colors tab)
+## 🤖 AutoHotkey Setup
 
 The AHK script requires **AutoHotkey v2** (free):
 

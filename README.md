@@ -54,7 +54,7 @@ Crop images and animated GIFs to Mudae's required **225×350px** (9:14) format.
 
 ## 🚀 Getting Started
 
-1. Either download, clone this repo or go to [Site](itsdrnk.github.io/mudaesorter)
+1. Either download, clone this repo or go to the site on the right side of this page
 - ↓ IF downloaded ↓
 2. Open `index.html` in any modern browser — nothing else needed
 - Then

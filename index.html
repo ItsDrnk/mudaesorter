@@ -1,175 +1,269 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Mudae Sorter</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<title>Mudae Toolkit</title>
+<link rel="icon" type="image/png" href="https://cdn.imgchest.com/files/59a3ca5bc2d6.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-body {
+:root{
+  --bg:#0a0a0f;
+  --panel:#13131a;
+  --panel2:#1a1a24;
+  --border:#1f1f2e;
+  --border2:#2a2a3a;
+  --accent:#7c3aed;
+  --accent-light:#a78bfa;
+  --text:#e5e7eb;
+  --text-dim:#9ca3af;
+  --text-faint:#6b7280;
+  --green:#4ade80;
+  --red:#dc2626;
+  --danger-bg:#991b1b;
+}
+*{box-sizing:border-box;}
+body{
   margin:0;
-  font-family:Arial, sans-serif;
-  background:#111;
-  color:white;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
 }
 
-/* Tabs */
-.tabs {
+/* ===== Top Bar: Profiles ===== */
+.topbar{
   display:flex;
-  background:#222;
+  align-items:center;
+  gap:12px;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  padding:10px 18px;
+  flex-wrap:wrap;
+  position:sticky;
+  top:0;
+  z-index:500;
 }
-.tab {
-  padding:12px 20px;
+.topbar-brand{
+  font-weight:800;
+  color:var(--accent-light);
+  font-size:1.05em;
+  margin-right:8px;
+  white-space:nowrap;
+}
+.profile-select{
+  background:var(--panel2);
+  color:var(--text);
+  border:1px solid var(--border2);
+  padding:7px 10px;
+  border-radius:6px;
+  font-size:0.92em;
+  max-width:220px;
+}
+.topbar button{
+  background:var(--panel2);
+  color:var(--text);
+  border:1px solid var(--border2);
+  padding:7px 12px;
+  border-radius:6px;
   cursor:pointer;
-  border-right:1px solid #333;
+  font-size:0.88em;
+  white-space:nowrap;
 }
-.tab.active {
-  background:#333;
+.topbar button:hover{ background:#23233000; background:#262633; }
+.topbar button.primary{ background:var(--accent); border-color:var(--accent); font-weight:600;}
+.topbar button.primary:hover{ background:#6d28d9; }
+.topbar button.danger{ background:var(--danger-bg); border-color:#7f1d1d; }
+.topbar button.danger:hover{ background:#b91c1c; }
+.topbar-spacer{flex:1;}
+.topbar-right{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+#profileNameTag{
+  font-size:0.8em;
+  color:var(--text-faint);
+  margin-right:4px;
 }
 
-.section {
+/* ===== Tabs ===== */
+.tabs{
+  display:flex;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  padding:0 18px;
+  gap:2px;
+  overflow-x:auto;
+}
+.tab{
+  padding:13px 22px;
+  cursor:pointer;
+  color:var(--text-dim);
+  border-bottom:3px solid transparent;
+  font-weight:600;
+  font-size:0.95em;
+  white-space:nowrap;
+  user-select:none;
+}
+.tab:hover{ color:var(--text); background:#181822; }
+.tab.active{
+  color:var(--accent-light);
+  border-bottom-color:var(--accent);
+}
+
+.page{
   display:none;
   padding:20px;
+  max-width:1700px;
+  margin:0 auto;
 }
-.section.active {
-  display:block;
-}
+.page.active{ display:block; }
 
-/* Inputs */
-textarea {
+/* ===== Shared bits ===== */
+textarea{
   width:100%;
-  height:120px;
-  background:#1a1a1a;
-  color:white;
-  border:1px solid #444;
+  background:var(--panel2);
+  color:var(--text);
+  border:1px solid var(--border2);
   padding:10px;
   resize:vertical;
-  box-sizing:border-box;
-  margin-top:10px;
+  border-radius:6px;
+  font-family:inherit;
 }
-
-button {
-  margin-top:10px;
-  padding:8px 16px;
-  background:#444;
-  border:none;
-  color:white;
+input[type="text"], input[type="number"], select{
+  background:var(--panel2);
+  color:var(--text);
+  border:1px solid var(--border2);
+  padding:7px 9px;
+  border-radius:6px;
+  font-family:inherit;
+}
+button{
+  background:#3a3a48;
+  border:1px solid var(--border2);
+  color:var(--text);
+  padding:8px 14px;
+  border-radius:6px;
   cursor:pointer;
+  font-size:0.9em;
 }
-button:hover {
-  background:#666;
-}
+button:hover{ background:#46465a; }
+button.btn-primary{ background:var(--accent); border-color:var(--accent); font-weight:600; }
+button.btn-primary:hover{ background:#6d28d9; }
+button.btn-secondary{ background:#374151; border-color:#4b5563; }
+button.btn-danger{ background:var(--danger-bg); border-color:#7f1d1d; }
+button.btn-danger:hover{ background:#b91c1c; }
+button.btn-sm{ padding:5px 10px; font-size:0.82em; }
+button.active{ outline:2px solid var(--accent-light); }
+button:disabled{ opacity:0.45; cursor:not-allowed; }
 
-/* Main Grid */
-.grid {
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-  margin-top:20px;
-  align-content:flex-start;
+.section-title{
+  color:var(--accent-light);
+  font-size:1.3em;
+  font-weight:700;
+  margin:0 0 12px;
+}
+.card-panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:18px;
+  margin-bottom:16px;
 }
 
 /* Collapsible Sections */
-.collapsible-header {
-  background:#222;
-  border:1px solid #333;
-  padding:12px;
+.collapsible-header{
+  background:var(--panel);
+  border:1px solid var(--border);
+  padding:12px 14px;
   cursor:pointer;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-top:15px;
+  margin-top:12px;
   user-select:none;
+  border-radius:8px;
+  font-weight:600;
 }
-
-.collapsible-header:hover {
-  background:#2a2a2a;
-}
-
-.collapsible-header.expanded {
-  background:#333;
-}
-
-.collapsible-content {
+.collapsible-header:hover{ background:#181822; }
+.collapsible-header.expanded{ background:#191926; border-radius:8px 8px 0 0; }
+.collapsible-content{
   display:none;
-  padding:15px;
-  border:1px solid #333;
+  padding:14px;
+  border:1px solid var(--border);
   border-top:none;
-  background:#1a1a1a;
+  background:var(--panel2);
+  border-radius:0 0 8px 8px;
 }
+.collapsible-content.expanded{ display:block; }
 
-.collapsible-content.expanded {
-  display:block;
-}
-
-.tile {
-  background:#222;
-  border:1px solid #333;
-  padding:6px;
-  cursor:grab;
-  position:relative;
-  user-select:none;
-}
-
-.tile img {
-  width:100%;
-  display:block;
-  pointer-events:none;
-}
-
-.tile-name {
-  margin-top:6px;
-  font-size:13px;
-  text-align:center;
-}
-
-.group-container {
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  padding:12px;
-  padding-top:28px;
-  border-radius:6px;
-  position:relative;
-}
-
-.group-item {
+/* Info / legend chips for mudae commands */
+.cmd-chip{
   display:inline-block;
-  position:relative;
+  background:#2a2a3a;
+  color:var(--green);
+  padding:2px 7px;
+  border-radius:4px;
+  font-size:0.85em;
+  font-family:'Consolas', monospace;
+  margin:0 2px;
 }
-
-.group-drag-handle {
-  position:absolute;
-  left:0;
-  top:-10px;
-  width:40px;
-  height:18px;
-  cursor:grab;
-  border-radius:3px 3px 0 0;
-  display:flex;
+.info-icon{
+  display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-size:14px;
-  opacity:0.9;
-  font-weight:bold;
-  user-select:none;
-  draggable:true;
-  min-width:max-content;
-  padding:0 6px;
-  white-space:nowrap;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:var(--border2);
+  color:var(--text-dim);
+  font-size:0.75em;
+  font-weight:700;
+  cursor:help;
+  margin-left:6px;
+  position:relative;
 }
-
-.gallery-btn {
+.info-icon .tooltip{
+  display:none;
   position:absolute;
-  bottom:6px;
-  right:6px;
-  background:#000c;
-  padding:3px 6px;
-  font-size:12px;
-  cursor:pointer;
+  left:50%;
+  top:130%;
+  transform:translateX(-50%);
+  background:#000;
+  color:var(--text);
+  border:1px solid var(--border2);
+  padding:10px 12px;
+  border-radius:8px;
+  font-size:0.85em;
+  font-weight:400;
+  white-space:normal;
+  width:260px;
+  z-index:50;
+  box-shadow:0 6px 20px rgba(0,0,0,0.5);
 }
+.info-icon:hover .tooltip{ display:block; }
 
-/* Modal */
-.modal {
+/* Toast message */
+.toast{
+  position:fixed;
+  bottom:22px;
+  right:22px;
+  background:#111;
+  border:1px solid var(--accent);
+  color:var(--text);
+  padding:12px 18px;
+  border-radius:8px;
+  z-index:2000;
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  opacity:0;
+  transform:translateY(10px);
+  transition:all 0.25s;
+  pointer-events:none;
+  max-width:340px;
+}
+.toast.show{ opacity:1; transform:translateY(0); }
+.toast.error{ border-color:var(--red); }
+
+/* Modal (shared, used by gallery + dialogs) */
+.modal-overlay{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.8);
@@ -178,935 +272,2552 @@ button:hover {
   justify-content:center;
   z-index:1000;
 }
-
-.modal-content {
-  background:#111;
+.modal-overlay.show{ display:flex; }
+.modal-box{
+  background:var(--panel);
   width:90%;
   max-width:1000px;
   max-height:85vh;
   overflow:auto;
-  padding:20px;
-  box-sizing:border-box;
-  border:1px solid #444;
-  scrollbar-width:none;
+  padding:22px;
+  border-radius:12px;
+  border:1px solid var(--border2);
+  position:relative;
+  scrollbar-width:thin;
 }
-
-.modal-content::-webkit-scrollbar {
-  display:none;
+.modal-close{
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:32px;
+  height:32px;
+  padding:0;
+  font-size:18px;
+  border-radius:50%;
 }
+.modal-box.small{ max-width:420px; }
 
-/* Gallery Grid */
-.gallery-grid {
+.gallery-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
   gap:10px;
   margin-top:15px;
 }
-
-.gallery-grid img {
+.gallery-grid img{
   width:100%;
   height:auto;
   cursor:pointer;
-  border:1px solid #333;
+  border:1px solid var(--border2);
+  border-radius:4px;
 }
-.gallery-grid img:hover {
-  border-color:white;
+.gallery-grid img:hover{ border-color:var(--accent-light); }
+
+/* ===== Sorter Tiles ===== */
+.tile{
+  background:var(--panel2);
+  border:1px solid var(--border2);
+  padding:6px;
+  cursor:grab;
+  position:relative;
+  user-select:none;
+  width:140px;
+  border-radius:6px;
+}
+.tile img{ width:100%; display:block; border-radius:4px; pointer-events:none; }
+.tile-name{
+  margin-top:6px;
+  font-size:13px;
+  text-align:center;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.gallery-btn{
+  position:absolute;
+  bottom:6px;
+  right:6px;
+  background:#000c;
+  padding:3px 6px;
+  font-size:12px;
+  cursor:pointer;
+  border-radius:4px;
+}
+.group-container{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  padding:12px;
+  padding-top:28px;
+  border-radius:8px;
+  position:relative;
+}
+.group-drag-handle{
+  position:absolute;
+  left:0;
+  top:-10px;
+  height:18px;
+  cursor:grab;
+  border-radius:5px 5px 0 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  opacity:0.95;
+  font-weight:bold;
+  user-select:none;
+  min-width:max-content;
+  padding:0 8px;
+  white-space:nowrap;
+  color:#0a0a0f;
+}
+.profile-pill-row{
+  background:var(--panel);
+  border:2px solid;
+  border-radius:8px;
+  padding:8px 12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:8px;
 }
 
-.wishlist-item {
-  background:#1c1c1c;
-  border:1px solid #333;
-  padding:8px;
-  margin-bottom:6px;
+/* ===== Wishlist ===== */
+.wishlist-item{
+  background:var(--panel2);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  padding:10px 12px;
+  margin-bottom:8px;
   display:flex;
   align-items:center;
   justify-content:space-between;
   cursor:grab;
+  gap:10px;
 }
+.wishlist-controls{ display:flex; gap:4px; flex-shrink:0; }
+.wishlist-controls button{ padding:4px 8px; font-size:12px; }
+.boost-info{ font-size:12px; opacity:0.7; margin-left:10px; }
 
-.wishlist-controls button {
-  margin-left:4px;
-  padding:3px 6px;
-  font-size:12px;
+/* ===== Noter character cards (from arceus, adapted) ===== */
+.series-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(300px, 1fr));
+  gap:16px;
+  margin-top:16px;
 }
-
-.boost-info {
-  font-size:12px;
-  opacity:0.7;
-  margin-left:10px;
+.series-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
 }
+.series-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 16px;
+  background:#181822;
+  border-bottom:1px solid var(--border);
+}
+.series-title{
+  font-weight:700;
+  color:var(--accent-light);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.series-count{ color:var(--text-dim); font-size:0.85em; flex-shrink:0; margin-left:8px;}
+.card-controls{ padding:10px 14px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:8px;}
+.controls-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
+.controls-row.main-actions{ justify-content:space-between; }
+.sort-buttons{ display:flex; align-items:center; gap:4px; flex-wrap:wrap;}
+.sort-label{ font-size:0.78em; color:var(--text-faint); margin-right:2px;}
+.bulk-apply-group{ display:flex; flex:1; min-width:160px; border:1px solid var(--border2); border-radius:6px; overflow:hidden;}
+.bulk-apply-group .note-input{ flex:1; border:none; border-radius:0; background:var(--panel2); min-width:0;}
+.apply-btn-group{ display:flex; }
+.apply-btn-group button{ border-radius:0; border:none; border-left:1px solid var(--border2); font-size:0.78em; padding:6px 9px;}
+.color-swatch-btn{ flex-shrink:0; }
+.characters-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  padding:14px;
+}
+.character-card{
+  width:135px;
+  border-radius:8px;
+  overflow:hidden;
+  border:2px solid var(--card-color, #670d08);
+  cursor:pointer;
+  position:relative;
+  background:#0d0d12;
+  transition:opacity 0.15s;
+}
+.character-card.excluded{ opacity:0.35; }
+.character-card.hidden-char{ display:none; }
+.character-card img{ width:100%; height:170px; object-fit:cover; display:block; }
+.character-rank-badge{
+  position:absolute;
+  top:4px;
+  left:4px;
+  background:#000c;
+  color:var(--accent-light);
+  font-size:0.75em;
+  font-weight:700;
+  padding:2px 6px;
+  border-radius:4px;
+  cursor:pointer;
+  z-index:5;
+}
+.character-owner-badge{
+  font-size:0.65em;
+  text-align:center;
+  border:1px solid;
+  border-radius:4px;
+  margin:3px 4px 0;
+  padding:1px 3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.character-info{ padding:2px 0; }
+.character-name{
+  font-size:0.78em;
+  text-align:center;
+  padding:4px 4px 2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.character-stats{ display:flex; padding:0 3px 4px; gap:3px; }
+.stat-badge{ flex:1; text-align:center; background:#13131a; border-radius:4px; padding:2px 0;}
+.stat-badge-label{ font-size:0.55em; color:var(--text-faint); text-transform:uppercase;}
+.stat-badge-value{ font-size:0.7em; font-weight:700; }
+.permanently-disabled::after{
+  content:'🚫';
+  position:absolute;
+  top:4px;
+  right:4px;
+  font-size:1.1em;
+  background:#000a;
+  border-radius:50%;
+  padding:2px;
+  z-index:5;
+}
+.hide-disabled-emoji .permanently-disabled::after{ display:none; }
+.note-editor-input{ width:100%; box-sizing:border-box; font-size:0.7em; text-align:center; padding:3px; border:1px solid var(--accent); background:var(--panel2); color:var(--text); border-radius:4px; margin:0;}
+.rank-input{ width:32px; font-size:0.7em; padding:1px 2px; border-radius:4px; border:1px solid var(--accent); background:#000; color:var(--text);}
+.fit-width .series-grid{ grid-template-columns:1fr !important; }
+.stats-bar{ display:flex; gap:14px; flex-wrap:wrap; margin:14px 0; }
+.stat-item{ background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:10px 16px; text-align:center; min-width:120px;}
+.stat-label{ font-size:0.75em; color:var(--text-faint); text-transform:uppercase; margin-bottom:4px;}
+.stat-value{ font-size:1.4em; font-weight:800; color:var(--accent-light); }
+.filter-controls-container{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+.filter-control{ display:flex; flex-direction:column; gap:4px; font-size:0.8em; color:var(--text-dim); }
+.filter-control input, .filter-control select{ width:110px; }
+.command-item{
+  background:var(--panel2);
+  border-left:4px solid var(--accent);
+  border-radius:8px;
+  padding:12px 14px;
+  margin-bottom:10px;
+}
+.command-header{ display:flex; justify-content:space-between; margin-bottom:6px; }
+.command-series{ font-weight:700; color:var(--accent-light); font-size:0.9em; }
+.command-text{
+  font-family:'Consolas', monospace;
+  font-size:0.82em;
+  background:#0d0d12;
+  padding:8px 10px;
+  border-radius:6px;
+  word-break:break-all;
+  margin-bottom:8px;
+  max-height:120px;
+  overflow:auto;
+}
+.quick-notes-bar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:16px;
+}
+.quick-note{
+  background:var(--panel2);
+  border:2px solid var(--accent);
+  border-radius:8px;
+  padding:7px 10px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:0.9em;
+}
+.quick-note:hover{ background:var(--accent); color:#fff; }
+.quick-note.copied{ background:#059669 !important; border-color:#059669 !important; color:#fff !important; }
+.quick-note-remove{ opacity:0.6; padding:0 4px; }
+.quick-note-remove:hover{ opacity:1; color:#f87171; }
+.color-indicator{ width:12px; height:12px; border-radius:3px; flex-shrink:0; }
 
+/* Quick notes floating panel */
+.quicknotes-fab{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  background:var(--accent);
+  border:none;
+  font-size:1.4em;
+  cursor:pointer;
+  z-index:900;
+  box-shadow:0 6px 18px rgba(0,0,0,0.5);
+}
+.quicknotes-fab:hover{ background:#6d28d9; }
+.quicknotes-panel{
+  position:fixed;
+  bottom:90px;
+  right:24px;
+  width:280px;
+  max-height:60vh;
+  background:var(--panel);
+  border:1px solid var(--border2);
+  border-radius:12px;
+  padding:16px;
+  z-index:899;
+  display:none;
+  flex-direction:column;
+  box-shadow:0 10px 30px rgba(0,0,0,0.6);
+}
+.quicknotes-panel.show{ display:flex; }
+.quicknotes-panel-title{ font-weight:700; color:var(--accent-light); margin-bottom:10px; }
+.quicknotes-list{ display:flex; flex-direction:column; gap:8px; overflow-y:auto; flex:1; }
+.quicknotes-add{ display:flex; gap:6px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border2); }
+.quicknotes-add input{ flex:1; min-width:0; }
 </style>
 </head>
 <body>
 
-<div class="tabs">
-  <div class="tab active" onclick="switchTab(0)">Sorter</div>
-  <div class="tab" onclick="switchTab(1)">Wishlist</div>
+<!-- ===================== TOP BAR ===================== -->
+<div class="topbar">
+  <span class="topbar-brand">🎴 Mudae Toolkit</span>
+  <select id="profileSelect" class="profile-select" onchange="switchProfile(this.value)"></select>
+  <button onclick="openNewProfileModal()" title="Create a new profile">+ New</button>
+  <button onclick="openRenameProfileModal()" title="Rename current profile">✏️ Rename</button>
+  <button onclick="duplicateProfile()" title="Duplicate current profile">⧉ Duplicate</button>
+  <button class="danger" onclick="confirmDeleteProfile()" title="Delete current profile">🗑 Delete</button>
+  <div class="topbar-spacer"></div>
+  <div class="topbar-right">
+    <span id="profileNameTag"></span>
+    <button onclick="exportProfile()" title="Save this profile to a JSON file">💾 Export Profile</button>
+    <button onclick="document.getElementById('importProfileInput').click()" title="Load a profile from a JSON file">📂 Import Profile</button>
+    <button onclick="exportAllProfiles()" title="Back up every profile at once">📦 Export All</button>
+    <button onclick="document.getElementById('importAllInput').click()" title="Restore every profile from a backup">📦 Import All</button>
+    <input type="file" id="importProfileInput" accept=".json" style="display:none" onchange="importProfile(event)">
+    <input type="file" id="importAllInput" accept=".json" style="display:none" onchange="importAllProfiles(event)">
+  </div>
 </div>
 
-<!-- Sorter -->
-<div class="section active">
-  <div class="collapsible-header" onclick="toggleCollapsible(this)">
-    <span>▶ Load/Generate Grid</span>
-  </div>
-  <div class="collapsible-content">
-    <textarea id="listInput" placeholder="Rem | 🕺 - https://link.png"></textarea>
-    <button onclick="generateGrid()">1st Generate Grid</button>
-    <button onclick="generateCommand()">Generate Commands</button>
-  </div>
+<!-- ===================== TABS ===================== -->
+<div class="tabs">
+  <div class="tab active" data-tab="sorter" onclick="switchTab('sorter')">🗂 Sorter</div>
+  <div class="tab" data-tab="noter" onclick="switchTab('noter')">📝 Noter</div>
+  <div class="tab" data-tab="wishlist" onclick="switchTab('wishlist')">💞 Wishlist</div>
+</div>
+
+<!-- ===================== TOAST ===================== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===================== SORTER TAB ===================== -->
+<div class="page active" id="page-sorter">
 
   <div class="collapsible-header" onclick="toggleCollapsible(this)">
-    <span>▶ Groups</span>
+    <span>▶ Load / Add Characters</span>
+    <span class="info-icon">i<span class="tooltip">Paste the output of <span class="cmd-chip">$mmasi-</span> (or <span class="cmd-chip">$mmsaty+ri-c+x+ko</span> for full data). This is the same input used by the Noter tab — it fills both at once.</span></span>
   </div>
-  <div class="collapsible-content">
-    <div style="display:flex; gap:10px; margin-bottom:10px;">
-      <input type="text" id="groupNameInput" placeholder="Group name (e.g., rezero)" style="flex:1; background:#1a1a1a; color:white; border:1px solid #444; padding:8px;">
-      <input type="color" id="groupColorInput" value="#444444" style="width:50px; height:32px; cursor:pointer;">
-      <button onclick="createGroup()">Create Group</button>
+  <div class="collapsible-content expanded" style="display:block;">
+    <textarea id="sorterInput" rows="6" placeholder="Paste your $mmasi- (or $mmsaty+ri-c+x+ko) output here&#10;&#10;Dungeon Meshi - 36/40&#10;#819 - Marcille Donato  💞 => arczeus | ✨ · ($wa) · :chaoskey:  (10) (#EAC57C) 1,304 ka - https://mudae.net/uploads/5107688/example.gif"></textarea>
+    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn-primary" onclick="loadFromMudaeInput('replace')">Replace All Characters</button>
+      <button onclick="loadFromMudaeInput('merge')">Add New Only (skip duplicates)</button>
+      <button class="btn-secondary" onclick="document.getElementById('sorterInput').value=''">Clear Box</button>
     </div>
-    <div id="groupsContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div>
   </div>
 
   <div class="collapsible-header" onclick="toggleCollapsible(this)">
-    <span>▶ Add New Characters</span>
+    <span>▶ Visual Groups</span>
+    <span class="info-icon">i<span class="tooltip">These groups are just for organizing tiles on your screen — they don't get sent to Mudae. Right-click a tile to add it to a group.</span></span>
   </div>
   <div class="collapsible-content">
-    <textarea id="addNewInput" placeholder="Paste your full list here - duplicates will be ignored"></textarea>
-    <button onclick="addNewCharacters()">Add New Characters Only</button>
+    <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+      <input type="text" id="groupNameInput" placeholder="Group name (e.g., rezero)" style="flex:1; min-width:160px;">
+      <input type="color" id="groupColorInput" value="#444444" style="width:50px; height:34px; cursor:pointer; padding:2px;">
+      <button class="btn-primary" onclick="createGroup()">Create Group</button>
+    </div>
+    <div id="groupsContainer" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
   </div>
 
   <div class="collapsible-header" onclick="toggleCollapsible(this)">
     <span>▶ $sortmarry Command</span>
+    <span class="info-icon">i<span class="tooltip">Drag tiles below into your preferred order, then generate <span class="cmd-chip">$sortmarry</span> to reorder your harem in Mudae to match.</span></span>
   </div>
   <div class="collapsible-content">
-    <button onclick="copySort()">Copy $sortmarry</button>
-    <textarea id="sortOutput" readonly></textarea>
+    <button class="btn-primary" onclick="generateSortCommand()">Generate $sortmarry</button>
+    <button onclick="copyText('sortOutput')">Copy</button>
+    <textarea id="sortOutput" rows="4" readonly style="margin-top:10px;"></textarea>
   </div>
 
   <div class="collapsible-header" onclick="toggleCollapsible(this)">
-    <span>▶ $ci Commands</span>
+    <span>▶ $ci Image Commands</span>
+    <span class="info-icon">i<span class="tooltip">For each character where you picked a specific image (via the 🖼 gallery button on a tile), this builds the <span class="cmd-chip">$ci</span> command to set that image in Mudae. Click each button in order, pasting into Discord between clicks.</span></span>
   </div>
   <div class="collapsible-content">
     <div id="ciContainer"></div>
-    <div id="ciProgress" style="margin-top:8px; opacity:0.8;"></div>
-    <button onclick="copyNextCi()">Copy Next CI</button>
+    <div id="ciProgress" style="margin-top:8px; opacity:0.8; font-size:0.9em;"></div>
+    <button class="btn-primary" onclick="copyNextCi()" style="margin-top:6px;">Copy Next $ci (or press "N")</button>
   </div>
 
-<hr style="margin:20px 0; border-color:#333;">
+  <hr style="margin:20px 0; border-color:var(--border);">
 
-  <button onclick="undoGrid()">↶ Undo (Ctrl+Z)</button>
-  <button onclick="redoGrid()">↷ Redo (Ctrl+Shift+Z)</button>
-  <button onclick="saveProfile()">💾 Save Profile</button>
-  <button onclick="document.getElementById('loadInput').click()">📂 Load Profile</button>
-  <button onclick="clearGalleryCache(); alert('Gallery cache cleared!')">🗑️ Clear Image Cache</button>
-<input type="file" id="loadInput" accept=".json" style="display:none" onchange="loadProfile(event)">
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+    <button onclick="undoGrid()">↶ Undo (Ctrl+Z)</button>
+    <button onclick="redoGrid()">↷ Redo (Ctrl+Shift+Z)</button>
+    <button class="btn-danger" onclick="clearGalleryCache()">🗑 Clear Image Cache</button>
+    <button onclick="snapshotGrid('sorter')" title="Save a PNG image of your sorter tiles">📸 Snapshot Sorter</button>
+  </div>
 
-  <div class="grid" id="grid"></div>
+  <div class="grid" id="sorterGrid" style="display:flex; flex-wrap:wrap; gap:12px; align-content:flex-start;"></div>
 </div>
 
-<!-- Wishlist -->
-<div class="section">
-  <textarea id="wishlistInput" placeholder="Paste wishlist here..."></textarea>
-  <button onclick="parseWishlist()">Parse Wishlist</button>
-  <button onclick="generateWishlistCommands()">Generate Wishlist Commands</button>
-  <div id="wishlistSummary" style="margin-top:15px; font-weight:bold;"></div>
-  <textarea id="wishlistOutput" style="height:120px; margin-top:10px;" readonly></textarea>
+<!-- ===================== NOTER TAB ===================== -->
+<div class="page" id="page-noter">
 
-  <!-- Wishlist Commands UI -->
-  <div id="wishlistCommandsBox" style="margin-top:12px; border:1px solid #333; padding:12px; background:#151515;">
-    <div style="font-weight:bold; margin-bottom:8px;">Wishlist Commands (steps)</div>
-    <div id="wishlistCommandContainer"></div>
-    <div id="wishlistProgress" style="margin-top:8px; opacity:0.8;"></div>
-    <ol id="wishlistSteps" style="margin-top:8px; padding-left:18px; color:#ddd;"></ol>
-    <button onclick="copyNextWishlistCommand()" style="margin-top:8px;">Copy Next Wishlist Command</button>
+  <div class="card-panel">
+    <h2 class="section-title">Input <span class="info-icon" style="font-size:0.6em; vertical-align:middle;">i<span class="tooltip">Same character pool as the Sorter tab. Paste <span class="cmd-chip">$mmasi-</span> output (or <span class="cmd-chip">$mmsaty+ri-c+x+ko</span> for extra data like color/keys/owner) in the Sorter tab's "Load / Add Characters" box — it fills this view automatically.</span></span></h2>
+    <p style="color:var(--text-faint); font-size:0.88em; margin-bottom:10px;">To load characters, use the box at the top of the <b>Sorter</b> tab — both tabs share the same data.</p>
+    <div id="noterStats" class="stats-bar"></div>
+    <button onclick="snapshotGrid('noter')" style="margin-top:8px;" title="Save a PNG image of your noter cards">📸 Snapshot Noter</button>
   </div>
 
-  <!-- Character Search/Add UI -->
-  <div id="wishlistAddCharBox" style="margin-top:18px; border:1px solid #333; padding:12px; background:#181818;">
-    <div style="font-weight:bold; margin-bottom:8px;">Add Character to Wishlist</div>
-    <input type="text" id="wishlistCharSearchInput" placeholder="Type character name..." style="width:60%; padding:6px; background:#222; color:#fff; border:1px solid #444;">
-    <button onclick="searchWishlistCharacter()" style="margin-left:8px;">Search</button>
+  <div class="card-panel">
+    <h2 class="section-title" style="font-size:1.05em;">Options</h2>
+
+    <div style="margin-bottom:14px;">
+      <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">Grouping</h3>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn-sm" onclick="setGrouping('nogroup')" id="group-nogroup-btn">None</button>
+        <button class="btn-sm active" onclick="setGrouping('series')" id="group-series-btn">Series</button>
+        <button class="btn-sm" onclick="setGrouping('note')" id="group-note-btn">Note</button>
+        <button class="btn-sm" onclick="setGrouping('color')" id="group-color-btn">Color</button>
+        <button class="btn-sm" onclick="setGrouping('keys')" id="group-keys-btn">Keys</button>
+        <button class="btn-sm" onclick="setGrouping('kakera')" id="group-kakera-btn">Kakera</button>
+        <button class="btn-sm" onclick="setGrouping('gender')" id="group-gender-btn">Gender</button>
+        <button class="btn-sm" onclick="setGrouping('roulette')" id="group-roulette-btn">Roulette</button>
+        <button class="btn-sm" onclick="setGrouping('owner')" id="group-owner-btn">Owner</button>
+      </div>
+      <div id="kakera-range-container" style="display:none; margin-top:10px; align-items:center; gap:10px;">
+        <label style="font-size:0.85em;">Range Size:</label>
+        <input type="number" id="kakera-range-input" value="1000" min="1" style="width:110px;">
+        <button class="btn-sm" onclick="displaySeries()">Apply</button>
+      </div>
+      <div id="keys-range-container" style="display:none; margin-top:10px; align-items:center; gap:10px;">
+        <label style="font-size:0.85em;">Range Size:</label>
+        <input type="number" id="keys-range-input" value="1" min="1" style="width:110px;">
+        <button class="btn-sm" onclick="displaySeries()">Apply</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px; display:flex; gap:24px; flex-wrap:wrap;">
+      <div>
+        <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">Sort Groups</h3>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-sm" onclick="sortGroups('alpha')" id="sort-alpha-btn">A-Z</button>
+          <button class="btn-sm active" onclick="sortGroups('count')" id="sort-count-btn">Count</button>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">Ranking <span class="info-icon">i<span class="tooltip">Click the # badge on a card to set a custom rank within its group.</span></span></h3>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-sm" onclick="toggleRanking(true)" id="ranking-on-btn">On</button>
+          <button class="btn-sm active" onclick="toggleRanking(false)" id="ranking-off-btn">Off</button>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">Columns</h3>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-sm" onclick="changeGridColumns(1)" id="grid-btn-1">1</button>
+          <button class="btn-sm" onclick="changeGridColumns(2)" id="grid-btn-2">2</button>
+          <button class="btn-sm active" onclick="changeGridColumns(3)" id="grid-btn-3">3</button>
+          <button class="btn-sm" onclick="changeGridColumns(4)" id="grid-btn-4">4</button>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">Layout</h3>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-sm" onclick="toggleFitToScreen(true)" id="fit-on-btn">Fit</button>
+          <button class="btn-sm active" onclick="toggleFitToScreen(false)" id="fit-off-btn">Centered</button>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">Deselected Cards</h3>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-sm active" onclick="toggleDeselectedVisibility(true)" id="deselected-show-btn">Show</button>
+          <button class="btn-sm" onclick="toggleDeselectedVisibility(false)" id="deselected-hide-btn">Hide</button>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">🚫 Disabled Icon</h3>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-sm active" onclick="toggleDisabledIconVisibility(true)" id="disabled-icon-show-btn">Show</button>
+          <button class="btn-sm" onclick="toggleDisabledIconVisibility(false)" id="disabled-icon-hide-btn">Hide</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">Bulk Selection</h3>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn-sm" onclick="selectAllCharacters()">Select All</button>
+        <button class="btn-sm" onclick="deselectAllCharacters()">Deselect All</button>
+        <button class="btn-sm" onclick="selectDisabledCharacters()">Select 🚫 Disabled</button>
+        <button class="btn-sm" onclick="deselectDisabledCharacters()">Deselect 🚫 Disabled</button>
+      </div>
+    </div>
+
+    <div id="filter-section">
+      <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">Filter Characters</h3>
+      <div class="filter-controls-container">
+        <div class="filter-control"><label>Min Ka</label><input type="number" id="min-kakera" placeholder="0"></div>
+        <div class="filter-control"><label>Max Ka</label><input type="number" id="max-kakera" placeholder="any"></div>
+        <div class="filter-control"><label>Min Keys</label><input type="number" id="min-keys" placeholder="0"></div>
+        <div class="filter-control"><label>Max Keys</label><input type="number" id="max-keys" placeholder="any"></div>
+        <div class="filter-control"><label>Owner</label><select id="filter-owner"><option value="any">Any</option></select></div>
+        <div class="filter-control">
+          <label>Gender</label>
+          <select id="filter-gender">
+            <option value="any">Any</option>
+            <option value="has_waifu">Has Waifu</option>
+            <option value="has_husbando">Has Husbando</option>
+            <option value="only_waifu">Only Waifu</option>
+            <option value="only_husbando">Only Husbando</option>
+            <option value="genderless">Genderless / Other</option>
+          </select>
+        </div>
+        <div class="filter-control">
+          <label>Roulette</label>
+          <select id="filter-roulette">
+            <option value="any">Any</option>
+            <option value="has_animanga">Has Animanga</option>
+            <option value="has_game">Has Game</option>
+            <option value="only_animanga">Only Animanga</option>
+            <option value="only_game">Only Game</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div class="filter-control" style="flex-direction:row; align-self:flex-end; gap:8px;">
+          <button class="btn-primary btn-sm" onclick="applyFilter()">Apply Filter</button>
+          <button class="btn-secondary btn-sm" onclick="clearFilter()">Revert</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:10px; margin:16px 0; flex-wrap:wrap;">
+    <button class="btn-primary" onclick="generateNoteCommands()" id="generateNoteBtn" disabled>Generate <span class="cmd-chip" style="color:#fff; background:#5b21b6;">$n</span> Note Commands</button>
+    <button class="btn-primary" onclick="generateColorCommands()" id="generateColorBtn" disabled>Generate <span class="cmd-chip" style="color:#fff; background:#5b21b6;">$ec</span> Color Commands</button>
+    <button class="btn-primary" onclick="showPlayerStats()" id="playerStatsBtn" disabled>📊 Player Stats</button>
+    <button onclick="scrollToCommands()" id="goToCommandsBtn" style="display:none;">Go to Commands ↓</button>
+  </div>
+
+  <div id="noterMessage"></div>
+  <div id="playerStatsSection" style="display:none;"></div>
+  <div id="seriesGrid" class="series-grid"></div>
+  <div id="commands"></div>
+
+  <div style="text-align:center; color:var(--text-faint); font-size:0.78em; margin-top:30px; padding:14px 0;">
+    Noter view based on <strong>Mudae Note Manager</strong> by arczeus.
+  </div>
+</div>
+
+<!-- ===================== WISHLIST TAB ===================== -->
+<div class="page" id="page-wishlist">
+  <div class="card-panel">
+    <h2 class="section-title">Wishlist <span class="info-icon" style="font-size:0.6em; vertical-align:middle;">i<span class="tooltip">Paste your wishlist export (from <span class="cmd-chip">$wishlist</span> / <span class="cmd-chip">$wl</span>). ⭐ marks star-wished characters, ✅ marks ones you already own.</span></span></h2>
+    <textarea id="wishlistInput" rows="5" placeholder="Paste wishlist here..."></textarea>
+    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn-primary" onclick="parseWishlist()">Parse Wishlist</button>
+      <button onclick="generateWishlistCommands()">Generate Wishlist Commands</button>
+    </div>
+    <div id="wishlistSummary" style="margin-top:12px; font-weight:bold;"></div>
+  </div>
+
+  <div class="card-panel" id="wishlistCommandsBox">
+    <h3 style="font-weight:700; margin-bottom:10px; color:var(--accent-light);">Wishlist Commands (steps)</h3>
+    <div id="wishlistCommandContainer"></div>
+    <div id="wishlistProgress" style="margin-top:8px; opacity:0.8; font-size:0.9em;"></div>
+    <ol id="wishlistSteps" style="margin-top:8px; padding-left:18px; color:#ddd; font-size:0.88em;"></ol>
+    <button class="btn-primary" onclick="copyNextWishlistCommand()" style="margin-top:8px;">Copy Next Wishlist Command</button>
+  </div>
+
+  <div class="card-panel" id="wishlistAddCharBox">
+    <h3 style="font-weight:700; margin-bottom:10px; color:var(--accent-light);">Add Character to Wishlist</h3>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <input type="text" id="wishlistCharSearchInput" placeholder="Type character name..." style="flex:1; min-width:200px;">
+      <button class="btn-primary" onclick="searchWishlistCharacter()">Search</button>
+    </div>
     <div id="wishlistCharSearchResults" style="margin-top:12px;"></div>
   </div>
 
-  <div id="wishlistContainer" style="margin-top:20px;"></div>
+  <div id="wishlistContainer" style="margin-top:10px;"></div>
 </div>
 
-<!-- Modal -->
-<div class="modal" id="galleryModal">
-  <div class="modal-content">
-    <h3 id="modalTitle"></h3>
+<!-- ===================== IMAGE GALLERY MODAL ===================== -->
+<div class="modal-overlay" id="galleryModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeGallery()">✕</button>
+    <h3 id="modalTitle" style="color:var(--accent-light);"></h3>
     <div class="gallery-grid" id="galleryContainer"></div>
-    <button onclick="closeGallery()" style="position:absolute; top:15px; left:50%; transform:translateX(-50%); width:30px; height:30px; padding:0; font-size:20px;">✕</button>
+  </div>
+</div>
+
+<!-- ===================== QUICK NOTES (floating) ===================== -->
+<button class="quicknotes-fab" onclick="toggleQuickNotesPanel()" title="Quick Notes">📌</button>
+<div class="quicknotes-panel" id="quickNotesPanel">
+  <div class="quicknotes-panel-title">Quick Notes <span style="font-size:0.7em; color:var(--text-faint); font-weight:400;">(click to copy)</span></div>
+  <div class="quicknotes-list" id="quickNotesList"></div>
+  <div class="quicknotes-add">
+    <input type="text" id="newQuickNote" placeholder="Add note or #hex...">
+    <button class="btn-primary btn-sm" onclick="addQuickNote()">+</button>
+  </div>
+</div>
+
+<!-- ===================== NEW / RENAME PROFILE MODAL ===================== -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal-box small">
+    <button class="modal-close" onclick="closeProfileModal()">✕</button>
+    <h3 id="profileModalTitle" style="color:var(--accent-light); margin-bottom:14px;">New Profile</h3>
+    <input type="text" id="profileModalInput" placeholder="e.g. The Castle of Dreams" style="width:100%; padding:9px; margin-bottom:14px;">
+    <button class="btn-primary" onclick="submitProfileModal()" style="width:100%;">Save</button>
   </div>
 </div>
 
 <script>
-let items = [];
-let draggedIndex = null;
-let selectedImages = {};
-let galleryCache = {};
-let activeTileIndex = null;
-let ciList = [];
-let ciIndex = 0;
-let wishlistCommandList = [];
-let wishlistCommandIndex = 0;
-let groups = [];
-let nextGroupId = 0;
-let draggedGroup = null;
-let draggedGroupContainer = null;
+/* =========================================================================
+   CORE DATA MODEL
+   One character pool per profile. Each character carries everything both
+   the Sorter and Noter views need - there's only one parser (the rich
+   $mmasi one) and both tabs are just different lenses on the same array.
+   ========================================================================= */
 
-// Undo/Redo stacks for grid only
+function freshProfileData(){
+  return {
+    characters: [],       // flat array, shared by Sorter + Noter
+    groups: [],            // Sorter's manual visual groups
+    nextGroupId: 0,
+    wishlist: [],
+    quickNotes: ['⭐', '✨', '💕', 'uft', '#fefefe', '#000000'],
+    selectedImages: {},    // name -> chosen image index (for $ci)
+    ui: {
+      grouping: 'series',
+      sortMethod: 'count',
+      rankingEnabled: false,
+      showDeselected: true,
+      showDisabledIcon: true,
+      preferredColumns: 3,
+      fitToScreen: false
+    },
+    preFilterCharacterStates: null
+  };
+}
+
+const STORAGE_KEY = 'mudaeToolkit_v1';
+
+const Store = {
+  profiles: {},
+  activeProfileId: null
+};
+
+function loadStoreFromDisk(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.profiles && Object.keys(parsed.profiles).length){
+        Store.profiles = parsed.profiles;
+        Store.activeProfileId = parsed.activeProfileId;
+        return;
+      }
+    }
+  }catch(e){ console.warn('Failed to load store', e); }
+
+  // First run / corrupted: try to migrate legacy single-profile autosave
+  const migrated = migrateLegacyAutosave();
+  if(migrated) return;
+
+  // Truly fresh start
+  const id = 'default';
+  Store.profiles = { [id]: { name: 'Default', data: freshProfileData() } };
+  Store.activeProfileId = id;
+}
+
+function migrateLegacyAutosave(){
+  try{
+    const legacy = localStorage.getItem('mudae-autosave');
+    if(!legacy) return false;
+    const data = JSON.parse(legacy);
+    const fresh = freshProfileData();
+    fresh.characters = (data.items || []).map(it => itemToCharacter(it));
+    fresh.selectedImages = data.selectedImages || {};
+    fresh.wishlist = data.wishlist || [];
+    fresh.groups = data.groups || [];
+    fresh.nextGroupId = data.nextGroupId || 0;
+    const id = 'default';
+    Store.profiles = { [id]: { name: 'Default (migrated)', data: fresh } };
+    Store.activeProfileId = id;
+    saveStore();
+    return true;
+  }catch(e){ return false; }
+}
+
+// Helper used only during migration of the old flat mudaesorter format
+function itemToCharacter(it){
+  const namePart = (it.name || '').split('|');
+  return {
+    id: cryptoId(),
+    name: (namePart[0] || '').trim(),
+    note: (namePart[1] || '').trim(),
+    image: it.image || null,
+    series: 'Imported',
+    kakera: '', keys: '', color: '', owner: '',
+    rank: 0, globalRank: '', mudaeTags: [], isDisabled: false,
+    excluded: false, sortOrder: 0
+  };
+}
+
+function cryptoId(){
+  return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function saveStore(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Store));
+  }catch(e){ console.error('Failed to save store', e); }
+}
+
+function getActiveProfile(){
+  return Store.profiles[Store.activeProfileId];
+}
+function getData(){
+  return getActiveProfile().data;
+}
+
+/* ---------------- Profile management UI ---------------- */
+
+function renderProfileSelect(){
+  const sel = document.getElementById('profileSelect');
+  sel.innerHTML = '';
+  Object.keys(Store.profiles).forEach(id => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = Store.profiles[id].name;
+    if(id === Store.activeProfileId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  document.getElementById('profileNameTag').textContent =
+    Object.keys(Store.profiles).length + ' profile' + (Object.keys(Store.profiles).length===1?'':'s');
+}
+
+function switchProfile(id){
+  if(!Store.profiles[id]) return;
+  Store.activeProfileId = id;
+  saveStore();
+  renderEverything();
+}
+
+let profileModalMode = null; // 'new' | 'rename'
+function openNewProfileModal(){
+  profileModalMode = 'new';
+  document.getElementById('profileModalTitle').textContent = 'New Profile';
+  document.getElementById('profileModalInput').value = '';
+  document.getElementById('profileModal').classList.add('show');
+  document.getElementById('profileModalInput').focus();
+}
+function openRenameProfileModal(){
+  profileModalMode = 'rename';
+  document.getElementById('profileModalTitle').textContent = 'Rename Profile';
+  document.getElementById('profileModalInput').value = getActiveProfile().name;
+  document.getElementById('profileModal').classList.add('show');
+  document.getElementById('profileModalInput').focus();
+}
+function closeProfileModal(){
+  document.getElementById('profileModal').classList.remove('show');
+}
+function submitProfileModal(){
+  const name = document.getElementById('profileModalInput').value.trim();
+  if(!name){ showToast('Please enter a name', true); return; }
+
+  if(profileModalMode === 'new'){
+    const id = cryptoId();
+    Store.profiles[id] = { name, data: freshProfileData() };
+    Store.activeProfileId = id;
+    showToast(`Created profile "${name}"`);
+  } else if(profileModalMode === 'rename'){
+    getActiveProfile().name = name;
+    showToast(`Renamed to "${name}"`);
+  }
+  saveStore();
+  closeProfileModal();
+  renderEverything();
+}
+
+function duplicateProfile(){
+  const src = getActiveProfile();
+  const id = cryptoId();
+  Store.profiles[id] = { name: src.name + ' (copy)', data: JSON.parse(JSON.stringify(src.data)) };
+  Store.activeProfileId = id;
+  saveStore();
+  renderEverything();
+  showToast(`Duplicated as "${Store.profiles[id].name}"`);
+}
+
+function confirmDeleteProfile(){
+  const ids = Object.keys(Store.profiles);
+  if(ids.length <= 1){
+    showToast("Can't delete your only profile", true);
+    return;
+  }
+  const name = getActiveProfile().name;
+  if(!confirm(`Delete profile "${name}"? This can't be undone (unless you exported a backup).`)) return;
+
+  delete Store.profiles[Store.activeProfileId];
+  Store.activeProfileId = Object.keys(Store.profiles)[0];
+  saveStore();
+  renderEverything();
+  showToast(`Deleted "${name}"`);
+}
+
+function exportProfile(){
+  const profile = getActiveProfile();
+  const blob = new Blob([JSON.stringify({ name: profile.name, data: profile.data }, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `mudae-profile-${profile.name.replace(/[^a-z0-9]+/gi,'_')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Profile exported');
+}
+
+function importProfile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      const id = cryptoId();
+      const name = parsed.name || file.name.replace('.json','');
+      const data = Object.assign(freshProfileData(), parsed.data || parsed);
+      Store.profiles[id] = { name, data };
+      Store.activeProfileId = id;
+      saveStore();
+      renderEverything();
+      showToast(`Imported profile "${name}"`);
+    }catch(err){
+      showToast('Import failed: invalid file', true);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function exportAllProfiles(){
+  const blob = new Blob([JSON.stringify(Store, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `mudae-toolkit-all-profiles-backup.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('All profiles exported');
+}
+
+function importAllProfiles(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!parsed.profiles || !Object.keys(parsed.profiles).length) throw new Error('bad format');
+      if(!confirm('This will replace ALL current profiles with the ones in this backup. Continue?')) return;
+      Store.profiles = parsed.profiles;
+      Store.activeProfileId = parsed.activeProfileId || Object.keys(parsed.profiles)[0];
+      saveStore();
+      renderEverything();
+      showToast('All profiles restored');
+    }catch(err){
+      showToast('Import failed: invalid backup file', true);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+/* ---------------- Toast ---------------- */
+function showToast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>{ t.className = 'toast'; }, 3200);
+}
+
+/* ---------------- Tabs / collapsibles ---------------- */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + name));
+}
+
+function toggleCollapsible(header){
+  header.classList.toggle('expanded');
+  const content = header.nextElementSibling;
+  content.classList.toggle('expanded');
+  content.style.display = content.classList.contains('expanded') ? 'block' : 'none';
+  const span = header.querySelector('span');
+  span.textContent = header.classList.contains('expanded') ? span.textContent.replace('▶','▼') : span.textContent.replace('▼','▶');
+}
+
+function copyText(id){
+  const el = document.getElementById(id);
+  if(!el.value) return;
+  navigator.clipboard.writeText(el.value);
+  showToast('Copied to clipboard');
+}
+
+function flashButton(btn){
+  const orig = btn.style.background;
+  btn.style.background = '#2ecc71';
+  setTimeout(()=>{ btn.style.background = orig; }, 200);
+}
+
+/* =========================================================================
+   SHARED PARSER  ($mmasi- / $mmsaty+ri-c+x+ko output)
+   Produces the single character array used by both Sorter and Noter tabs.
+   ========================================================================= */
+
+function parseMudaeInput(input){
+  const characters = [];
+  const lines = input.split('\n');
+  let currentSeries = null;
+  let order = 0;
+
+  for(let i = 0; i < lines.length; i++){
+    let line = lines[i].trim();
+    if(!line) continue;
+
+    const seriesMatch = line.match(/^(.+?)\s*-\s*(\d+)\/(\d+)$/);
+    if(seriesMatch){
+      currentSeries = seriesMatch[1].trim();
+      continue;
+    }
+
+    const charMatch = line.match(/^(.+?)\s+-\s+(https?:\/\/.+)$/);
+    if(!charMatch) continue;
+
+    // flat format ($mmsty+i-c+x+ko) has no series headers — use a placeholder
+    if(!currentSeries) currentSeries = 'Uncategorized';
+
+    let fullInfo = charMatch[1].trim();
+    const imageUrl = charMatch[2].trim();
+
+    let owner = '';
+    const ownerMatch = fullInfo.match(/💞\s*=>\s+(\S+)/);
+    if(ownerMatch){
+      owner = ownerMatch[1].trim();
+      fullInfo = fullInfo.replace(/💞\s*=>\s+\S+\s*/, '');
+    }
+
+    fullInfo = fullInfo.replace(/\(\s*\$(?:toggle(?:western|irl)|serverdisable)\s*\)\s*·?\s*/g, '');
+
+    // strip :silverkey:, :bronzekey:, :goldkey: tokens (from flat $mmsty format)
+    fullInfo = fullInfo.replace(/:\w+key:\s*/g, '');
+
+    // handle "🚫  $wa  DISABLED" / "🚫  $ha  DISABLED" inline patterns
+    const disabledInline = fullInfo.includes('🚫');
+    if(disabledInline){
+      fullInfo = fullInfo.replace(/🚫\s*\$\w+\s*DISABLED\s*·?\s*/g, '').trim();
+    }
+
+    let kakera = '', keys = '', color = '', note = '', cleanName = '', isDisabled = false, globalRank = '';
+    if(disabledInline) isDisabled = true;
+
+    const globalRankMatch = fullInfo.match(/^#([\d,]+)\s+-\s+/);
+    if(globalRankMatch){
+      globalRank = globalRankMatch[1].replace(/,/g, '');
+      fullInfo = fullInfo.substring(globalRankMatch[0].length).trim();
+    }
+
+    const kakeraMatch = fullInfo.match(/([\d,]+)\s*ka\s*$/);
+    if(kakeraMatch){
+      kakera = kakeraMatch[1].replace(/,/g, '');
+      fullInfo = fullInfo.substring(0, kakeraMatch.index).trim();
+    }
+
+    let mudaeTags = [];
+    const tagsMatch = fullInfo.match(/\(\s*\$[^)]+\s*\)/);
+    if(tagsMatch){
+      const tagsString = tagsMatch[0];
+      const rawTags = tagsString.match(/\$([a-zA-Z]{2})/g);
+      if(rawTags) mudaeTags = rawTags.map(tag => tag.substring(1));
+      fullInfo = fullInfo.replace(tagsString, '').trim().replace(/·\s*·/g, '·').trim();
+    }
+
+    let namePart = fullInfo;
+    let metaPart = '';
+    const metaSeparatorIndex = fullInfo.lastIndexOf('·');
+    if(metaSeparatorIndex !== -1){
+      namePart = fullInfo.substring(0, metaSeparatorIndex).trim();
+      metaPart = fullInfo.substring(metaSeparatorIndex + 1).trim();
+    }
+
+    if(metaPart){
+      const colorMatch = metaPart.match(/\(#([0-9a-fA-F]{6})\)/);
+      if(colorMatch) color = '#' + colorMatch[1];
+      const keysMatch = metaPart.match(/\((\d+)\)/);
+      if(keysMatch) keys = keysMatch[1];
+    }
+
+    if(namePart.includes('🚫')){
+      isDisabled = true;
+      namePart = namePart.replace(/🚫/g, '').trim();
+    }
+
+    const pipeIndex = namePart.indexOf('|');
+    if(pipeIndex !== -1){
+      cleanName = namePart.substring(0, pipeIndex).trim();
+      note = namePart.substring(pipeIndex + 1).trim();
+    } else {
+      cleanName = namePart;
+    }
+
+    characters.push({
+      id: cryptoId(),
+      name: cleanName,
+      note: note,
+      image: imageUrl,
+      series: currentSeries,
+      kakera: kakera,
+      keys: keys,
+      color: color,
+      owner: owner,
+      rank: 0,
+      globalRank: globalRank,
+      mudaeTags: mudaeTags,
+      isDisabled: isDisabled,
+      excluded: false,
+      sortOrder: order++
+    });
+  }
+
+  return characters;
+}
+
+function loadFromMudaeInput(mode){
+  const raw = document.getElementById('sorterInput').value.trim();
+  if(!raw){ showToast('Paste some character data first', true); return; }
+
+  const parsed = parseMudaeInput(raw);
+  if(parsed.length === 0){
+    showToast('Parsing failed — check the input format', true);
+    return;
+  }
+
+  const data = getData();
+  pushGridState();
+
+  if(mode === 'replace'){
+    data.characters = parsed;
+    showToast(`Loaded ${parsed.length} characters`);
+  } else {
+    const existingKey = c => c.name.trim().toLowerCase() + '::' + c.series.trim().toLowerCase();
+    const existingNames = new Set(data.characters.map(existingKey));
+    let maxOrder = data.characters.reduce((m,c)=>Math.max(m, c.sortOrder||0), 0);
+    let added = 0;
+    parsed.forEach(c => {
+      if(!existingNames.has(existingKey(c))){
+        c.sortOrder = ++maxOrder;
+        data.characters.push(c);
+        existingNames.add(existingKey(c));
+        added++;
+      }
+    });
+    showToast(`Added ${added} new character${added!==1?'s':''}`);
+  }
+
+  populateOwnerFilter();
+  renderEverything();
+}
+
+/* =========================================================================
+   SORTER TAB
+   ========================================================================= */
+
+let draggedCharId = null;
+let draggedGroupId = null;
 let undoStack = [];
 let redoStack = [];
 const MAX_HISTORY = 100;
 
 function captureGridSnapshot(){
+  const data = getData();
   return {
-    items: JSON.parse(JSON.stringify(items)),
-    groups: JSON.parse(JSON.stringify(groups)),
-    selectedImages: JSON.parse(JSON.stringify(selectedImages))
+    characters: JSON.parse(JSON.stringify(data.characters)),
+    groups: JSON.parse(JSON.stringify(data.groups)),
+    selectedImages: JSON.parse(JSON.stringify(data.selectedImages))
   };
 }
-
 function pushGridState(){
   try{
     undoStack.push(captureGridSnapshot());
     if(undoStack.length > MAX_HISTORY) undoStack.shift();
-    // clear redo on new action
     redoStack = [];
-  }catch(e){console.log('pushGridState error',e);}  
+  }catch(e){ console.log('pushGridState error', e); }
 }
-
 function applyGridSnapshot(snapshot){
   if(!snapshot) return;
-  items = JSON.parse(JSON.stringify(snapshot.items || []));
-  groups = JSON.parse(JSON.stringify(snapshot.groups || []));
-  selectedImages = JSON.parse(JSON.stringify(snapshot.selectedImages || {}));
-  renderGrid();
+  const data = getData();
+  data.characters = JSON.parse(JSON.stringify(snapshot.characters));
+  data.groups = JSON.parse(JSON.stringify(snapshot.groups));
+  data.selectedImages = JSON.parse(JSON.stringify(snapshot.selectedImages));
+  renderSorterGrid();
+  saveStore();
 }
-
 function undoGrid(){
   if(undoStack.length === 0) return;
-  // push current state to redo
   redoStack.push(captureGridSnapshot());
-  const prev = undoStack.pop();
-  applyGridSnapshot(prev);
-  autosave();
+  applyGridSnapshot(undoStack.pop());
 }
-
 function redoGrid(){
   if(redoStack.length === 0) return;
   undoStack.push(captureGridSnapshot());
-  const next = redoStack.pop();
-  applyGridSnapshot(next);
-  autosave();
+  applyGridSnapshot(redoStack.pop());
 }
-
-// keyboard shortcuts
 document.addEventListener('keydown', function(e){
-  if((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z'){
-    e.preventDefault(); undoGrid();
-  }
-  if((e.ctrlKey || e.metaKey) && (e.shiftKey) && e.key.toLowerCase() === 'z'){
-    e.preventDefault(); redoGrid();
-  }
+  const tag = (e.target.tagName || '').toLowerCase();
+  if(tag === 'input' || tag === 'textarea') return;
+  if((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z'){ e.preventDefault(); undoGrid(); }
+  if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z'){ e.preventDefault(); redoGrid(); }
+  if(e.key.toLowerCase() === 'n'){ copyNextCi(); }
 });
 
-/* Load gallery cache from localStorage */
+/* ---- gallery image cache (per-profile would bloat storage; keep global, keyed by name) ---- */
+let galleryCache = {};
 function loadGalleryCache(){
-  const cached = localStorage.getItem("mudae-gallery-cache");
-  if(cached){
-    try{
-      galleryCache = JSON.parse(cached);
-    }catch(err){
-      galleryCache = {};
-    }
-  }
+  try{ galleryCache = JSON.parse(localStorage.getItem('mudaeToolkit_galleryCache') || '{}'); }
+  catch(e){ galleryCache = {}; }
 }
-
-/* Save gallery cache to localStorage */
 function saveGalleryCache(){
-  localStorage.setItem("mudae-gallery-cache", JSON.stringify(galleryCache));
+  try{ localStorage.setItem('mudaeToolkit_galleryCache', JSON.stringify(galleryCache)); }catch(e){}
 }
-
 function clearGalleryCache(){
   galleryCache = {};
-  localStorage.removeItem("mudae-gallery-cache");
+  localStorage.removeItem('mudaeToolkit_galleryCache');
+  showToast('Image cache cleared');
 }
 
-/* Tabs */
-function switchTab(i){
-  document.querySelectorAll(".tab").forEach((t,idx)=>{
-    t.classList.toggle("active",idx===i);
-  });
-  document.querySelectorAll(".section").forEach((s,idx)=>{
-    s.classList.toggle("active",idx===i);
-  });
-}
+function renderSorterGrid(){
+  const data = getData();
+  const grid = document.getElementById('sorterGrid');
+  grid.innerHTML = '';
 
-/* Collapsible Sections */
-function toggleCollapsible(header){
-  header.classList.toggle("expanded");
-  const content = header.nextElementSibling;
-  content.classList.toggle("expanded");
-  
-  const span = header.querySelector("span");
-  span.textContent = header.classList.contains("expanded") ? span.textContent.replace("▶", "▼") : span.textContent.replace("▼", "▶");
-}
+  // sort by sortOrder for stable display
+  const ordered = data.characters.slice().sort((a,b) => (a.sortOrder||0) - (b.sortOrder||0));
 
-/* Grid */
-function generateGrid(){
-  const raw = document
-    .getElementById("listInput")
-    .value
-    .trim()
-    .split("\n");
+  grid.ondragover = (e) => { if(draggedGroupId !== null){ e.preventDefault(); } };
+  grid.ondrop = (e) => { if(draggedGroupId !== null){ e.preventDefault(); draggedGroupId = null; } };
 
-  pushGridState();
-  items = [];
-  selectedImages = {};
-
-  raw.forEach(line => {
-    if (!line.trim()) return;
-
-    let namePart = line;
-    let image = null;
-
-    const dashIndex = line.indexOf(" - ");
-
-    if (dashIndex !== -1) {
-      namePart = line.substring(0, dashIndex).trim();
-      image = line.substring(dashIndex + 3).trim();
-    }
-
-    items.push({
-      name: namePart,
-      image: image || null
-    });
-  });
-
-  autosave();
-  renderGrid();
-}
-
-function renderGrid(){
-  const grid=document.getElementById("grid");
-  grid.innerHTML="";
-  
-  // Add drop handlers to grid for group reordering
-  grid.ondragover = (e) => {
-    if(draggedGroup !== null){
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
-    }
-  };
-  
-  grid.ondrop = (e) => {
-    if(draggedGroup !== null){
-      e.preventDefault();
-      draggedGroup = null;
-      draggedGroupContainer = null;
-    }
-  };
-  
-  // Create a map of items by group
-  const groupedItems = new Map();
-  const ungroupedItems = [];
-  
-  items.forEach((item, index) => {
-    const group = getGroupForItem(index);
-    if(group){
-      if(!groupedItems.has(group.id)){
-        groupedItems.set(group.id, []);
-      }
-      groupedItems.get(group.id).push({item, index});
+  const byGroup = new Map();
+  const ungrouped = [];
+  ordered.forEach(ch => {
+    const g = getGroupForChar(ch.id);
+    if(g){
+      if(!byGroup.has(g.id)) byGroup.set(g.id, []);
+      byGroup.get(g.id).push(ch);
     } else {
-      ungroupedItems.push({item, index});
+      ungrouped.push(ch);
     }
   });
-  
-  // Render grouped items
-  groups.forEach(group => {
-    const groupIndices = groupedItems.get(group.id);
-    if(!groupIndices) return;
-    
-    const container = document.createElement("div");
-    container.className = "group-container";
-    container.style.background = group.color + "20";
+
+  data.groups.forEach(group => {
+    const members = byGroup.get(group.id);
+    if(!members) return;
+
+    const container = document.createElement('div');
+    container.className = 'group-container';
+    container.style.background = group.color + '20';
     container.style.border = `2px solid ${group.color}`;
-    container.style.position = "relative";
-    
-  // Add drag handle at top
-    const handle = document.createElement("div");
-    handle.className = "group-drag-handle";
-    handle.textContent = "⋮ " + group.name;
+
+    const handle = document.createElement('div');
+    handle.className = 'group-drag-handle';
+    handle.textContent = '⋮ ' + group.name;
     handle.style.background = group.color;
     handle.draggable = true;
-    handle.ondragstart = (e) => {
-      draggedGroup = group.id;
-      draggedGroupContainer = container;
-      e.dataTransfer.effectAllowed = "move";
-    };
-    handle.ondragend = () => {
-      draggedGroup = null;
-      draggedGroupContainer = null;
-    };
+    handle.ondragstart = () => { draggedGroupId = group.id; };
+    handle.ondragend = () => { draggedGroupId = null; };
     container.appendChild(handle);
-    
-    groupIndices.forEach(({item, index}) => {
-      const tile = createTile(item, index, group);
-      container.appendChild(tile);
-    });
-    
-    // Make container itself draggable via the handle
-    container.ondragover = (e) => {
-      e.preventDefault();
-      if(draggedGroup === group.id && draggedGroupContainer){
-        container.style.opacity = "0.5";
-      }
-      e.dataTransfer.dropEffect = "move";
-    };
-    
-    container.ondragleave = () => {
-      container.style.opacity = "1";
-    };
-    
+
+    members.forEach(ch => container.appendChild(createTile(ch)));
+
+    container.ondragover = (e) => { e.preventDefault(); };
     container.ondrop = (e) => {
       e.preventDefault();
-      container.style.opacity = "1";
-      
-      if(draggedGroup === group.id && draggedGroupContainer){
-        // Moving the group within itself - do nothing
-        return;
-      }
-      
-      if(draggedIndex !== null){
-        const movedGroup = getGroupForItem(draggedIndex);
-        
-        // Remove from old group if exists
-        if(movedGroup){
-          movedGroup.memberIndices = movedGroup.memberIndices.filter(i => i !== draggedIndex);
-        }
-        
-        // Add to this group
-        if(!group.memberIndices.includes(draggedIndex)){
-          group.memberIndices.push(draggedIndex);
-        }
-        
-        draggedIndex = null;
-        autosave();
-        renderGrid();
+      if(draggedGroupId === group.id) return;
+      if(draggedCharId !== null){
+        pushGridState();
+        const movedGroup = getGroupForChar(draggedCharId);
+        if(movedGroup) movedGroup.memberIds = movedGroup.memberIds.filter(id => id !== draggedCharId);
+        if(!group.memberIds.includes(draggedCharId)) group.memberIds.push(draggedCharId);
+        draggedCharId = null;
+        saveStore();
+        renderSorterGrid();
+        renderGroups();
       }
     };
-    
+
     grid.appendChild(container);
   });
-  
-  // Render ungrouped items normally
-  ungroupedItems.forEach(({item, index}) => {
-    const tile = createTile(item, index, null);
-    grid.appendChild(tile);
-  });
+
+  ungrouped.forEach(ch => grid.appendChild(createTile(ch)));
 }
 
-function createTile(item, index, group){
-  const tile = document.createElement("div");
-  tile.className = "tile";
+function createTile(ch){
+  const tile = document.createElement('div');
+  tile.className = 'tile';
   tile.draggable = true;
-  tile.dataset.index = index;
-  tile.style.width = "140px";
-  
+  tile.dataset.id = ch.id;
+
+  const group = getGroupForChar(ch.id);
   if(group){
     tile.style.borderColor = group.color;
-    tile.style.borderWidth = "2px";
+    tile.style.borderWidth = '2px';
     tile.style.boxShadow = `0 0 6px ${group.color}40`;
   }
 
-  tile.ondragstart = (e) => {
-    // capture state before user starts moving a tile
-    pushGridState();
-    draggedIndex = index;
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/html", tile.innerHTML);
-  };
-  
-  tile.ondragover = (e) => {
-    e.preventDefault();
-    const target = Number(e.currentTarget.dataset.index);
-    
-    // Show preview
-    if(draggedIndex !== null && draggedIndex !== target){
-      // Fade out the target tile slightly
-      e.currentTarget.style.opacity = "0.6";
-      
-      // Create and show preview of dragged tile
-      if(!e.currentTarget.querySelector(".drag-preview")){
-        const preview = document.createElement("div");
-        preview.className = "drag-preview";
-        preview.style.position = "absolute";
-        preview.style.top = "0";
-        preview.style.left = "0";
-        preview.style.opacity = "0.4";
-        preview.style.pointerEvents = "none";
-        preview.innerHTML = e.dataTransfer.getData("text/html");
-        e.currentTarget.style.position = "relative";
-        e.currentTarget.appendChild(preview);
-      }
-    }
-    e.dataTransfer.dropEffect = "move";
-  };
-  
-  tile.ondragleave = (e) => {
-    e.currentTarget.style.opacity = "1";
-    const preview = e.currentTarget.querySelector(".drag-preview");
-    if(preview){
-      preview.remove();
-    }
-  };
-  
+  tile.ondragstart = () => { pushGridState(); draggedCharId = ch.id; };
+  tile.ondragover = (e) => { e.preventDefault(); };
   tile.ondrop = (e) => {
-    e.currentTarget.style.opacity = "1";
-    const preview = e.currentTarget.querySelector(".drag-preview");
-    if(preview){
-      preview.remove();
-    }
     e.preventDefault();
-    const target = Number(e.currentTarget.dataset.index);
-    const moved = items.splice(draggedIndex, 1)[0];
-    items.splice(target, 0, moved);
-    draggedIndex = null;
-    autosave();
-    renderGrid();
+    if(draggedCharId === null || draggedCharId === ch.id) return;
+    const data = getData();
+    const ordered = data.characters.slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+    const fromIdx = ordered.findIndex(c => c.id === draggedCharId);
+    const toIdx = ordered.findIndex(c => c.id === ch.id);
+    if(fromIdx === -1 || toIdx === -1) return;
+    const moved = ordered.splice(fromIdx, 1)[0];
+    ordered.splice(toIdx, 0, moved);
+    ordered.forEach((c, i) => c.sortOrder = i);
+    draggedCharId = null;
+    saveStore();
+    renderSorterGrid();
   };
 
-  if(item.image){
-    const img = document.createElement("img");
-    img.src = item.image;
+  if(ch.image){
+    const img = document.createElement('img');
+    img.src = ch.image;
+    img.onerror = () => { img.style.display = 'none'; };
     tile.appendChild(img);
   }
 
-  const nameDiv = document.createElement("div");
-  nameDiv.className = "tile-name";
-  nameDiv.textContent = item.name;
+  const nameDiv = document.createElement('div');
+  nameDiv.className = 'tile-name';
+  nameDiv.textContent = ch.name;
+  nameDiv.title = ch.name + (ch.note ? ' | ' + ch.note : '');
   tile.appendChild(nameDiv);
 
-  const btn = document.createElement("div");
-  btn.className = "gallery-btn";
-  btn.textContent = "🖼";
-  btn.onclick = (e) => { 
-    e.stopPropagation(); 
-    openGallery(index); 
-  };
+  const btn = document.createElement('div');
+  btn.className = 'gallery-btn';
+  btn.textContent = '🖼';
+  btn.title = 'Pick a specific image (builds $ci command)';
+  btn.onclick = (e) => { e.stopPropagation(); openGallery(ch.id); };
   tile.appendChild(btn);
-  
-  // Right click menu for groups
+
   tile.oncontextmenu = (e) => {
     e.preventDefault();
-    if(groups.length === 0) return;
-    
-    let menu = `Select a group:\n`;
-    groups.forEach((g, i) => {
-      menu += `${i+1}. ${g.name}\n`;
-    });
-    menu += `0. Remove from group`;
-    
+    const data = getData();
+    if(data.groups.length === 0){ showToast('Create a group first'); return; }
+    let menu = 'Select a group:\n';
+    data.groups.forEach((g,i) => { menu += `${i+1}. ${g.name}\n`; });
+    menu += '0. Remove from group';
     const choice = prompt(menu);
     if(choice === null) return;
-    
     const num = parseInt(choice);
-    if(num === 0){
-      removeFromGroup(index);
-    } else if(num > 0 && num <= groups.length){
-      addToGroup(index, groups[num-1].id);
-    }
+    if(num === 0) removeFromGroup(ch.id);
+    else if(num > 0 && num <= data.groups.length) addToGroup(ch.id, data.groups[num-1].id);
   };
-  
+
   return tile;
 }
 
-/* Generate Commands */
-function generateCommand(){
-  let sort="$sortmarry ";
-  ciList=[];
-  ciIndex=0;
+function getGroupForChar(charId){
+  return getData().groups.find(g => g.memberIds.includes(charId));
+}
+function addToGroup(charId, groupId){
+  const data = getData();
+  const group = data.groups.find(g => g.id === groupId);
+  if(!group) return;
+  pushGridState();
+  data.groups.forEach(g => { g.memberIds = g.memberIds.filter(id => id !== charId); });
+  if(!group.memberIds.includes(charId)) group.memberIds.push(charId);
+  saveStore();
+  renderSorterGrid();
+  renderGroups();
+}
+function removeFromGroup(charId){
+  pushGridState();
+  getData().groups.forEach(g => { g.memberIds = g.memberIds.filter(id => id !== charId); });
+  saveStore();
+  renderSorterGrid();
+  renderGroups();
+}
 
-  items.forEach(item=>{
-    const clean=item.name.split("|")[0].trim();
-    sort+=clean+"$";
+function createGroup(){
+  const nameInput = document.getElementById('groupNameInput');
+  const colorInput = document.getElementById('groupColorInput');
+  const name = nameInput.value.trim();
+  if(!name){ showToast('Enter a group name', true); return; }
+  pushGridState();
+  const data = getData();
+  data.groups.push({ id: data.nextGroupId++, name, color: colorInput.value, memberIds: [] });
+  nameInput.value = '';
+  colorInput.value = '#444444';
+  saveStore();
+  renderGroups();
+}
 
-    if(selectedImages[clean]){
-      ciList.push(`$ci ${clean} $${selectedImages[clean]}`);
+function renderGroups(){
+  const data = getData();
+  const container = document.getElementById('groupsContainer');
+  container.innerHTML = '';
+  data.groups.forEach(group => {
+    const div = document.createElement('div');
+    div.style.cssText = `background:${group.color}40; border:2px solid ${group.color}; border-radius:6px; padding:8px 12px; display:flex; align-items:center; gap:8px;`;
+
+    const label = document.createElement('span');
+    label.textContent = `${group.name} (${group.memberIds.length})`;
+    label.style.cssText = 'flex:1; font-weight:bold;';
+
+    const colorBtn = document.createElement('button');
+    colorBtn.textContent = '🎨';
+    colorBtn.className = 'btn-sm';
+    colorBtn.onclick = () => {
+      const newColor = prompt('Enter color (hex):', group.color);
+      if(newColor){
+        pushGridState();
+        group.color = newColor;
+        saveStore();
+        renderGroups();
+        renderSorterGrid();
+      }
+    };
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '✕';
+    deleteBtn.className = 'btn-sm btn-danger';
+    deleteBtn.onclick = () => {
+      pushGridState();
+      data.groups = data.groups.filter(g => g.id !== group.id);
+      saveStore();
+      renderGroups();
+      renderSorterGrid();
+    };
+
+    div.appendChild(label);
+    div.appendChild(colorBtn);
+    div.appendChild(deleteBtn);
+    container.appendChild(div);
+  });
+}
+
+/* ---- $sortmarry + $ci ---- */
+let ciList = [];
+let ciIndex = 0;
+
+function generateSortCommand(){
+  const data = getData();
+  const ordered = data.characters.slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+  let sort = '$sortmarry ';
+  ciList = [];
+  ciIndex = 0;
+
+  ordered.forEach(ch => {
+    sort += ch.name + '$';
+    if(data.selectedImages[ch.name]){
+      ciList.push(`$ci ${ch.name} $${data.selectedImages[ch.name]}`);
     }
   });
 
-  document.getElementById("sortOutput").value=sort.trim();
+  document.getElementById('sortOutput').value = sort.trim();
   renderCiButtons();
+  showToast('$sortmarry command generated');
 }
 
 function renderCiButtons(){
-  const container=document.getElementById("ciContainer");
-  container.innerHTML="";
-
-  ciList.forEach((cmd,i)=>{
-    const btn=document.createElement("button");
-    btn.textContent=cmd;
-    btn.style.display="block";
-    btn.style.width="100%";
-    btn.style.marginBottom="6px";
-    btn.dataset.index=i;
-
-    btn.onclick=()=>{
+  const container = document.getElementById('ciContainer');
+  container.innerHTML = '';
+  ciList.forEach((cmd, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = cmd;
+    btn.style.display = 'block';
+    btn.style.width = '100%';
+    btn.style.marginBottom = '6px';
+    btn.style.textAlign = 'left';
+    btn.onclick = () => {
       navigator.clipboard.writeText(cmd);
       flashButton(btn);
-      ciIndex=i+1;
+      ciIndex = i + 1;
       updateCiProgress();
-      highlightCurrent();
+      highlightCurrentCi();
     };
-
     container.appendChild(btn);
   });
-
-  highlightCurrent();
+  highlightCurrentCi();
   updateCiProgress();
 }
-
 function copyNextCi(){
-  if(ciIndex>=ciList.length) return;
-
+  if(ciIndex >= ciList.length) return;
   navigator.clipboard.writeText(ciList[ciIndex]);
-
-  const buttons=document.querySelectorAll("#ciContainer button");
-  const currentBtn=buttons[ciIndex];
-
-  if(currentBtn){
-    flashButton(currentBtn);
-  }
-
+  const buttons = document.querySelectorAll('#ciContainer button');
+  if(buttons[ciIndex]) flashButton(buttons[ciIndex]);
   ciIndex++;
-  highlightCurrent();
+  highlightCurrentCi();
   updateCiProgress();
 }
-
-function flashButton(btn){
-  btn.style.background="#2ecc71";
-  setTimeout(()=>{
-    btn.style.background="";
-  },200);
-}
-
-function highlightCurrent(){
-  const buttons=document.querySelectorAll("#ciContainer button");
-
-  buttons.forEach((btn,i)=>{
-    if(i===ciIndex){
-      btn.style.outline="2px solid #00bfff";
-    }else{
-      btn.style.outline="none";
-    }
+function highlightCurrentCi(){
+  document.querySelectorAll('#ciContainer button').forEach((btn,i)=>{
+    btn.style.outline = (i===ciIndex) ? '2px solid #00bfff' : 'none';
   });
 }
-
 function updateCiProgress(){
-  const progress=document.getElementById("ciProgress");
-  progress.textContent=`Progress: ${ciIndex} / ${ciList.length}`;
+  document.getElementById('ciProgress').textContent = `Progress: ${ciIndex} / ${ciList.length}`;
 }
 
-/* Copy */
-function copySort(){ copyText("sortOutput"); }
-function copyCi(){ copyText("ciOutput"); }
+/* ---- Gallery ---- */
+let activeGalleryCharId = null;
+async function openGallery(charId){
+  activeGalleryCharId = charId;
+  const data = getData();
+  const ch = data.characters.find(c => c.id === charId);
+  if(!ch) return;
+  const name = ch.name;
 
-function copyText(id){
-  const el=document.getElementById(id);
-  if(!el.value) return;
-  el.select();
-  document.execCommand("copy");
-}
-
-/* Gallery with rotating proxies */
-async function openGallery(index){
-  activeTileIndex=index;
-  const name=items[index].name.split("|")[0].trim();
-
-  document.getElementById("galleryModal").style.display="flex";
-  document.getElementById("modalTitle").textContent="Loading "+name+"...";
-  document.getElementById("galleryContainer").innerHTML="Loading...";
+  document.getElementById('galleryModal').classList.add('show');
+  document.getElementById('modalTitle').textContent = 'Loading ' + name + '...';
+  document.getElementById('galleryContainer').innerHTML = 'Loading...';
 
   if(galleryCache[name]){
+    document.getElementById('modalTitle').textContent = name;
     buildGallery(galleryCache[name]);
     return;
   }
 
-  const encoded = encodeURIComponent(name);
-  const targetURL = `https://mudae.net/character/${encoded}`;
+  // Extract character ID from the existing image URL (e.g. mudae.net/uploads/8537377/abc.png)
+  const charIdMatch = ch.image && ch.image.match(/\/uploads\/(\d+)\//);
+  const charNumId = charIdMatch ? charIdMatch[1] : null;
+
+  // Build page URL: prefer /character/{id}/{name} if we have the ID, else fall back to /character/{name}
+  const encodedName = encodeURIComponent(name);
+  const targetURL = charNumId
+    ? `https://mudae.net/character/${charNumId}/${encodedName}`
+    : `https://mudae.net/character/${encodedName}`;
 
   const proxies = [
-    `https://api.allorigins.win/raw?url=${targetURL}`,
+    `http://localhost:8000/${targetURL}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(targetURL)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetURL)}`,
     `https://api.codetabs.com/v1/proxy?quest=${targetURL}`,
-    `https://corsproxy.io/?${targetURL}`
+    `https://thingproxy.freeboard.io/fetch/${targetURL}`,
+    `https://cors-anywhere.herokuapp.com/${targetURL}`,
   ];
 
   let html = null;
-
-  for(let proxy of proxies){
+  for(const proxy of proxies){
     try{
-      const resp = await fetch(proxy);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 10000);
+      const resp = await fetch(proxy, {
+        signal: controller.signal,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      clearTimeout(timer);
+      if(!resp.ok) continue;
       const text = await resp.text();
-      if(text.includes("/uploads/")){
-        html = text;
-        break;
-      }
+      if(text.includes('/uploads/')){ html = text; break; }
     }catch(e){}
   }
 
   if(!html){
-    document.getElementById("galleryContainer").innerHTML="Failed to load gallery.";
+    // Try iframe approach as last resort — browser can load it even if proxies can't
+    document.getElementById('galleryContainer').innerHTML =
+      `<div style="padding:10px">
+        <div style="color:var(--red); margin-bottom:10px">Proxies couldn't reach mudae.net (likely bot protection).</div>
+        <div style="margin-bottom:10px; font-size:0.9em; color:var(--text-dim)">
+          Open the mudae.net page, then paste any image URL from it below to add it manually:
+        </div>
+        <a href="${targetURL}" target="_blank" style="display:inline-block; margin-bottom:12px; color:var(--accent-light)">Open ${name} on mudae.net ↗</a>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input id="manualImgUrl" type="text" placeholder="Paste image URL here (mudae.net/uploads/...)" style="flex:1; min-width:200px;">
+          <button onclick="addManualGalleryImage('${charId}')">Add Image</button>
+        </div>
+        <div id="manualImgPreview" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+        <button onclick="openGallery('${charId}')" style="margin-top:10px; font-size:0.82em;">🔄 Retry proxies</button>
+      </div>`;
     return;
   }
 
-  const parser=new DOMParser();
-  const doc=parser.parseFromString(html,"text/html");
+  // Regex-extract URLs directly from raw HTML — only from this character's upload folder
+  const uploadId = charNumId || (ch.image && ch.image.match(/\/uploads\/(\d+)\//)?.[1]);
+  const imgPattern = uploadId
+    ? new RegExp(`https://mudae\\.net/uploads/${uploadId}/[^\\s"']+\\.(?:png|gif)`, 'gi')
+    : /https:\/\/mudae\.net\/uploads\/\d+\/[^\s"']+\.(?:png|gif)/gi;
 
-  let images=[...doc.querySelectorAll("img")]
-    .map(img=>img.src)
-    .filter(src=>src.includes("/uploads/"));
+  // Extract with position index from title="Image N" to guarantee correct $ci order
+  // Pattern: title="Image N" ... src="URL" or src="URL" ... title="Image N"
+  const indexedPattern = uploadId
+    ? new RegExp(`(?:title="Image (\\d+)[^"]*"[^>]*>\\s*|)(?:https://mudae\\.net/uploads/${uploadId}/[^\\s"']+\\.(?:png|gif))`, 'gi')
+    : null;
 
-  images=[...new Set(images)];
+  // Simpler reliable approach: find all occurrences with their title index
+  const titleImgPattern = uploadId
+    ? new RegExp(`title="Image (\\d+)[^"]*"\\s*>\\s*<img[^>]+src="(https://mudae\\.net/uploads/${uploadId}/[^"]+\\.(?:png|gif))"`, 'gi')
+    : null;
 
-  if(images.length===0){
-    document.getElementById("galleryContainer").innerHTML="No images found.";
+  let images;
+  if(titleImgPattern){
+    const indexed = [];
+    let m;
+    while((m = titleImgPattern.exec(html)) !== null){
+      const idx = parseInt(m[1]);
+      const url = m[2];
+      if(!indexed.find(x => x.url === url)) indexed.push({ idx, url });
+    }
+    if(indexed.length > 0){
+      indexed.sort((a, b) => a.idx - b.idx);
+      images = indexed.map(x => x.url);
+    }
+  }
+  if(!images || images.length === 0){
+    // Fallback: first-occurrence order (Set preserves insertion order)
+    const matches = html.match(imgPattern) || [];
+    images = [...new Set(matches)];
+  }
+
+  if(images.length === 0){
+    document.getElementById('galleryContainer').innerHTML = 'No images found.';
     return;
   }
 
-  galleryCache[name]=images;
+  galleryCache[name] = images;
   saveGalleryCache();
+  document.getElementById('modalTitle').textContent = name + ' (' + images.length + ' images)';
   buildGallery(images);
 }
 
 function buildGallery(images){
-  const container=document.getElementById("galleryContainer");
-  container.innerHTML="";
-
-  images.forEach((src,i)=>{
-    const img=document.createElement("img");
-    img.src=src;
-    img.onclick=()=>{
+  const container = document.getElementById('galleryContainer');
+  container.innerHTML = '';
+  images.forEach((src, i) => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.onclick = () => {
       pushGridState();
-      const clean=items[activeTileIndex].name.split("|")[0].trim();
-      selectedImages[clean]=i+1;
-      items[activeTileIndex].image=src;
-      autosave();
+      const data = getData();
+      const ch = data.characters.find(c => c.id === activeGalleryCharId);
+      if(ch){
+        data.selectedImages[ch.name] = i + 1;
+        ch.image = src;
+      }
+      saveStore();
       closeGallery();
-      renderGrid();
+      renderSorterGrid();
     };
     container.appendChild(img);
   });
 }
-
 function closeGallery(){
-  document.getElementById("galleryModal").style.display="none";
+  document.getElementById('galleryModal').classList.remove('show');
 }
-document.addEventListener("keydown",function(e){
-  if(e.key.toLowerCase()==="n"){
-    copyNextCi();
+
+function addManualGalleryImage(charId){
+  const input = document.getElementById('manualImgUrl');
+  const src = input.value.trim();
+  if(!src || !src.includes('mudae.net/uploads/')){ 
+    showToast('Paste a valid mudae.net/uploads/ URL', true); 
+    return; 
+  }
+  input.value = '';
+
+  // Show preview + make it clickable to select
+  const preview = document.getElementById('manualImgPreview');
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:relative; cursor:pointer;';
+  const img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'width:120px; height:150px; object-fit:cover; border:2px solid var(--border2); border-radius:6px;';
+  const selectBtn = document.createElement('button');
+  selectBtn.textContent = 'Use this';
+  selectBtn.style.cssText = 'display:block; width:100%; margin-top:4px; font-size:0.78em;';
+  selectBtn.onclick = () => {
+    pushGridState();
+    const data = getData();
+    const ch = data.characters.find(c => c.id === (charId || activeGalleryCharId));
+    if(ch){
+      const idx = preview.querySelectorAll('img').length; // approximate index
+      data.selectedImages[ch.name] = idx;
+      ch.image = src;
+    }
+    saveStore();
+    closeGallery();
+    renderSorterGrid();
+  };
+  wrapper.appendChild(img);
+  wrapper.appendChild(selectBtn);
+  preview.appendChild(wrapper);
+}
+
+/* =========================================================================
+   NOTER TAB
+   Same getData().characters array, just grouped/filtered/displayed by
+   series/note/color/etc instead of free-form drag order.
+   ========================================================================= */
+
+function setGrouping(method){
+  getData().ui.grouping = method;
+  document.querySelectorAll('#group-nogroup-btn,#group-series-btn,#group-note-btn,#group-color-btn,#group-keys-btn,#group-kakera-btn,#group-gender-btn,#group-roulette-btn,#group-owner-btn')
+    .forEach(b => b.classList.remove('active'));
+  document.getElementById(`group-${method}-btn`).classList.add('active');
+
+  document.getElementById('kakera-range-container').style.display = method === 'kakera' ? 'flex' : 'none';
+  document.getElementById('keys-range-container').style.display = method === 'keys' ? 'flex' : 'none';
+
+  saveStore();
+  displaySeries();
+}
+
+function sortGroups(method){
+  if(getData().characters.length === 0) return;
+  getData().ui.sortMethod = method;
+  document.querySelectorAll('#sort-alpha-btn,#sort-count-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`sort-${method}-btn`).classList.add('active');
+  saveStore();
+  displaySeries();
+}
+
+function toggleRanking(enabled){
+  getData().ui.rankingEnabled = enabled;
+  document.getElementById('ranking-on-btn').classList.toggle('active', enabled);
+  document.getElementById('ranking-off-btn').classList.toggle('active', !enabled);
+  saveStore();
+  if(getData().characters.length > 0) displaySeries();
+}
+
+function changeGridColumns(columns){
+  const grid = document.getElementById('seriesGrid');
+  if(grid) grid.style.gridTemplateColumns = `repeat(${columns}, minmax(300px, 1fr))`;
+  for(let i=1;i<=4;i++){ const b = document.getElementById(`grid-btn-${i}`); if(b) b.classList.remove('active'); }
+  const activeBtn = document.getElementById(`grid-btn-${columns}`);
+  if(activeBtn) activeBtn.classList.add('active');
+  getData().ui.preferredColumns = columns;
+  saveStore();
+}
+
+function toggleDeselectedVisibility(shouldShow){
+  getData().ui.showDeselected = shouldShow;
+  document.getElementById('deselected-show-btn').classList.toggle('active', shouldShow);
+  document.getElementById('deselected-hide-btn').classList.toggle('active', !shouldShow);
+  saveStore();
+  if(getData().characters.length > 0) displaySeries();
+}
+
+function toggleDisabledIconVisibility(shouldShow){
+  getData().ui.showDisabledIcon = shouldShow;
+  document.getElementById('disabled-icon-show-btn').classList.toggle('active', shouldShow);
+  document.getElementById('disabled-icon-hide-btn').classList.toggle('active', !shouldShow);
+  document.querySelector('body').classList.toggle('hide-disabled-emoji', !shouldShow);
+  saveStore();
+}
+
+function toggleFitToScreen(shouldFit){
+  getData().ui.fitToScreen = shouldFit;
+  document.getElementById('fit-on-btn').classList.toggle('active', shouldFit);
+  document.getElementById('fit-off-btn').classList.toggle('active', !shouldFit);
+  document.querySelector('body').classList.toggle('fit-width', shouldFit);
+  saveStore();
+}
+
+function escapeHTML(str){
+  if(typeof str !== 'string') return str;
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function showNoterMessage(text, type){
+  const el = document.getElementById('noterMessage');
+  el.className = type === 'error' ? 'error-message' : 'success-message';
+  el.style.color = type === 'error' ? 'var(--red)' : 'var(--green)';
+  el.style.padding = '8px 0';
+  el.textContent = text;
+  setTimeout(()=>{ el.textContent=''; }, 5000);
+}
+
+function handleImageError(imgEl){
+  imgEl.style.display = 'none';
+  const placeholder = document.createElement('div');
+  placeholder.style.cssText = 'width:100%; height:170px; background:#2a2a3a; display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:0.8em; text-align:center; padding:10px;';
+  placeholder.textContent = 'No Image Available';
+  imgEl.parentNode.insertBefore(placeholder, imgEl);
+}
+
+function createCharacterCardHTML(char){
+  let classNames = ['character-card'];
+  if(char.excluded) classNames.push('excluded');
+  if(char.isDisabled) classNames.push('permanently-disabled');
+  if(char.excluded && !getData().ui.showDeselected) classNames.push('hidden-char');
+
+  const colorCode = char.color || '#670d08';
+  const hasNote = char.note && char.note.trim() !== '';
+
+  const genders = new Set();
+  (char.mudaeTags||[]).forEach(tag => { const g = tag[0].toLowerCase(); if(g==='w'||g==='h') genders.add(g); });
+  const hasWaifu = genders.has('w'), hasHusbando = genders.has('h');
+
+  let genderBarHTML = '';
+  if(hasWaifu || hasHusbando){
+    genderBarHTML += '<div style="display:flex; text-align:center; font-size:0.65em; font-weight:600;">';
+    if(hasWaifu) genderBarHTML += '<div style="flex:1; padding:2px 0; background-color:#ff8f8f; color:#0a0a0f;" title="Waifu">Waifu</div>';
+    if(hasHusbando) genderBarHTML += '<div style="flex:1; padding:2px 0; background-color:#8fafff; color:#0a0a0f;" title="Husbando">Husbando</div>';
+    genderBarHTML += '</div>';
+  }
+
+  const roulettes = new Set();
+  (char.mudaeTags||[]).forEach(tag => { if(tag.length>1){ const r = tag[1].toLowerCase(); if(r==='a'||r==='g') roulettes.add(r); } });
+  const hasAnimanga = roulettes.has('a'), hasGame = roulettes.has('g');
+
+  let rouletteBarHTML = '<div style="display:flex; text-align:center; font-size:0.65em; font-weight:600;">';
+  if(hasAnimanga) rouletteBarHTML += '<div style="flex:1; padding:2px 0; background-color:#a78bfa; color:#0a0a0f;" title="Animanga">Animanga</div>';
+  if(hasGame) rouletteBarHTML += '<div style="flex:1; padding:2px 0; background-color:#ffcb70; color:#0a0a0f;" title="Game">Game</div>';
+  if(!hasAnimanga && !hasGame) rouletteBarHTML += '<div style="flex:1; padding:2px 0; background-color:#1f1f2e; color:#6b7280; font-style:italic;" title="Unknown Roulette">Unknown</div>';
+  rouletteBarHTML += '</div>';
+
+  return `<div class="${classNames.join(' ')}" data-char-id="${char.id}" style="--card-color:${colorCode};">
+${getData().ui.rankingEnabled ? `<div class="character-rank-badge" data-action="edit-rank">${char.rank > 0 ? char.rank : '#'}</div>` : ''}
+<img src="${char.image}" alt="${escapeHTML(char.name)}" loading="lazy" onerror="handleImageError(this)">
+<div class="character-info">
+<div class="character-name" title="${escapeHTML(char.name)}">${escapeHTML(char.name)}</div>
+${(() => {
+    if(!char.owner) return '';
+    const letter = char.owner[0].toUpperCase();
+    const hue = ((letter.charCodeAt(0) - 65) * 360) / 26;
+    const color = `hsl(${hue}, 80%, 65%)`;
+    return `<div class="character-owner-badge" title="Owner: ${escapeHTML(char.owner)}" style="color:${color}; border-color:${color};">${escapeHTML(char.owner)}</div>`;
+  })()}
+<div class="character-note" data-action="edit-note" title="${hasNote ? escapeHTML(char.note) : 'Click to add note'}" style="background:#13131a; padding:4px; font-size:0.7em; color:${hasNote ? '#9ca3af' : '#dc2626; font-weight:bold'}; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; border-radius:4px;">${hasNote ? escapeHTML(char.note) : 'No note!'}</div>
+<div class="character-stats">
+<div class="stat-badge"><div class="stat-badge-label">Rank</div><div class="stat-badge-value">${char.globalRank ? '#'+char.globalRank : '#?'}</div></div>
+<div class="stat-badge"><div class="stat-badge-label">Ka</div><div class="stat-badge-value">${char.kakera || '?'}</div></div>
+<div class="stat-badge"><div class="stat-badge-label">Keys</div><div class="stat-badge-value">${char.keys || '?'}</div></div>
+</div>
+</div>
+${genderBarHTML}
+${rouletteBarHTML}
+</div>`;
+}
+
+function selectAllCharacters(){
+  const data = getData();
+  if(data.characters.length === 0) return;
+  data.characters.forEach(c => c.excluded = false);
+  saveStore();
+  displaySeries();
+  updateNoterStats();
+}
+function deselectAllCharacters(){
+  const data = getData();
+  if(data.characters.length === 0) return;
+  data.characters.forEach(c => c.excluded = true);
+  saveStore();
+  displaySeries();
+  updateNoterStats();
+}
+function selectDisabledCharacters(){
+  const data = getData();
+  data.characters.forEach(c => { if(c.isDisabled) c.excluded = false; });
+  saveStore();
+  displaySeries();
+  updateNoterStats();
+}
+function deselectDisabledCharacters(){
+  const data = getData();
+  data.characters.forEach(c => { if(c.isDisabled) c.excluded = true; });
+  saveStore();
+  displaySeries();
+  updateNoterStats();
+}
+
+function displaySeries(){
+  const data = getData();
+  const grid = document.getElementById('seriesGrid');
+  grid.innerHTML = '';
+  if(data.characters.length === 0) return;
+
+  const groups = {};
+  data.characters.forEach(char => {
+    let groupKey;
+    switch(data.ui.grouping){
+      case 'note': groupKey = char.note.trim(); break;
+      case 'keys': {
+        const rangeSize = Math.max(1, parseInt(document.getElementById('keys-range-input').value) || 1);
+        const k = parseInt(char.keys) || 0;
+        const lower = Math.floor(k / rangeSize) * rangeSize;
+        groupKey = `${lower} - ${lower + rangeSize - 1} Keys`;
+        break;
+      }
+      case 'color': groupKey = (char.color || '#670D08').trim().toUpperCase(); break;
+      case 'nogroup': groupKey = 'All Characters'; break;
+      case 'kakera': {
+        const rangeSize = Math.max(1, parseInt(document.getElementById('kakera-range-input').value) || 1000);
+        const k = parseInt(char.kakera) || 0;
+        const lower = Math.floor(k / rangeSize) * rangeSize;
+        groupKey = `${lower} - ${lower + rangeSize - 1} ka`;
+        break;
+      }
+      case 'gender': {
+        const genders = new Set();
+        (char.mudaeTags||[]).forEach(tag => { const g = tag[0].toLowerCase(); if(g==='w'||g==='h') genders.add(g); });
+        if(genders.has('w') && genders.has('h')) groupKey = 'Waifu & Husbando';
+        else if(genders.has('w')) groupKey = 'Waifu';
+        else if(genders.has('h')) groupKey = 'Husbando';
+        else groupKey = 'Genderless / Other';
+        break;
+      }
+      case 'roulette': {
+        const roulettes = new Set();
+        (char.mudaeTags||[]).forEach(tag => { if(tag.length>1){ const r = tag[1].toLowerCase(); if(r==='a'||r==='g') roulettes.add(r); } });
+        if(roulettes.has('a') && roulettes.has('g')) groupKey = 'Animanga & Game';
+        else if(roulettes.has('a')) groupKey = 'Animanga';
+        else if(roulettes.has('g')) groupKey = 'Game';
+        else groupKey = 'Unknown Roulette';
+        break;
+      }
+      case 'owner': groupKey = char.owner ? char.owner : 'No Owner'; break;
+      case 'series': groupKey = char.series; break;
+      default: groupKey = char.series; break;
+    }
+    if(!groups[groupKey]) groups[groupKey] = { characters: [] };
+    groups[groupKey].characters.push(char);
+  });
+
+  const sortedGroupEntries = Object.entries(groups).sort((a,b) => {
+    const [keyA, dataA] = a, [keyB, dataB] = b;
+    if(data.ui.sortMethod === 'count') return dataB.characters.length - dataA.characters.length;
+    if(data.ui.grouping === 'kakera'){
+      return parseInt(keyA.split(' ')[0]) - parseInt(keyB.split(' ')[0]);
+    }
+    return keyA.localeCompare(keyB);
+  });
+
+  let finalHTML = '';
+  for(const [groupName, groupData] of sortedGroupEntries){
+    const includedCount = groupData.characters.filter(c => !c.excluded).length;
+    const allExcluded = groupData.characters.every(c => c.excluded);
+    const charIds = JSON.stringify(groupData.characters.map(c => c.id));
+
+    let displayName = groupName;
+    if(data.ui.grouping === 'note' && groupName === '') displayName = '(No Note)';
+    else if(data.ui.grouping === 'color' && groupName.toUpperCase() === '#670D08') displayName = '(No Color)';
+
+    if(data.ui.rankingEnabled && groupData.characters.every(c => !c.rank)){
+      groupData.characters.forEach((c, idx) => c.rank = idx + 1);
+    }
+    groupData.characters.sort((a,b) => (a.rank||999999) - (b.rank||999999));
+
+    const charactersHTML = groupData.characters.map(c => createCharacterCardHTML(c)).join('');
+
+    const groupCardHTML = `<div class="series-card" data-group-name="${escapeHTML(groupName)}" data-char-ids='${escapeHTML(charIds)}' data-total-chars="${groupData.characters.length}">
+<div class="series-header">
+<div class="series-title" title="${escapeHTML(displayName)}">${escapeHTML(displayName)}</div>
+<div class="series-count">${includedCount}/${groupData.characters.length}</div>
+</div>
+<div class="card-controls">
+<div class="controls-row main-actions">
+<div style="display:flex; gap:8px;">
+<button class="btn-sm ${allExcluded ? 'btn-danger' : 'btn-primary'}" data-action="toggle-group">${allExcluded ? 'Enable All' : 'Disable All'}</button>
+<button class="btn-sm btn-secondary" data-action="invert-group">Invert</button>
+</div>
+<div class="sort-buttons">
+<span class="sort-label">Sort:</span>
+<button data-action="sort" data-sort-by="original" class="btn-sm active">Original</button>
+<button data-action="sort" data-sort-by="az" class="btn-sm">A-Z</button>
+<button data-action="sort" data-sort-by="rank" class="btn-sm">Rank</button>
+<button data-action="sort" data-sort-by="kakera" class="btn-sm">Kakera</button>
+<button data-action="sort" data-sort-by="keys" class="btn-sm">Keys</button>
+</div>
+</div>
+<div class="controls-row">
+<div class="bulk-apply-group">
+<input type="text" class="note-input" placeholder="Apply note...">
+<div class="apply-btn-group">
+<button data-action="bulk-note" data-target="all" class="btn-sm">All</button>
+<button data-action="bulk-note" data-target="selected" class="btn-sm">Selected</button>
+</div>
+</div>
+<div class="bulk-apply-group">
+<div class="color-swatch-btn" onclick="this.querySelector('input').click()" style="width:32px; min-width:32px; align-self:stretch; background:#7c3aed; cursor:pointer; border-right:1px solid var(--border2); flex-shrink:0; position:relative; display:flex; align-items:center; justify-content:center;">
+<input type="color" class="color-picker-input" value="#7c3aed" style="position:absolute; width:100%; height:100%; opacity:0; cursor:pointer; border:none; padding:0; margin:0;">
+</div>
+<input type="text" class="note-input color-hex-input" placeholder="#RRGGBB">
+<div class="apply-btn-group">
+<button data-action="bulk-color" data-target="all" class="btn-sm">All</button>
+<button data-action="bulk-color" data-target="selected" class="btn-sm">Selected</button>
+</div>
+</div>
+</div>
+</div>
+<div class="characters-list">${charactersHTML}</div>
+</div>`;
+
+    const hasVisibleChars = groupData.characters.some(c => !c.excluded);
+    if(data.ui.showDeselected || hasVisibleChars) finalHTML += groupCardHTML;
+  }
+  grid.innerHTML = finalHTML;
+
+  const groupCount = sortedGroupEntries.length;
+  if(groupCount === 1) changeGridColumns(1);
+  else if(groupCount > 1 && grid.style.gridTemplateColumns.includes('repeat(1,')) changeGridColumns(data.ui.preferredColumns);
+}
+
+function findCharById(id){
+  return getData().characters.find(c => c.id === id);
+}
+
+function toggleCharacterById(charId){
+  const char = findCharById(charId);
+  if(!char) return;
+  char.excluded = !char.excluded;
+
+  const cardEl = document.querySelector(`.character-card[data-char-id="${charId}"]`);
+  if(cardEl){
+    cardEl.classList.toggle('excluded', char.excluded);
+    cardEl.classList.toggle('hidden-char', char.excluded && !getData().ui.showDeselected);
+    const groupCard = cardEl.closest('.series-card');
+    if(groupCard) updateGroupUI(groupCard);
+  }
+  updateNoterStats();
+  saveStore();
+}
+
+function updateGroupUI(groupCard){
+  let ids = [];
+  try{ ids = JSON.parse(groupCard.dataset.charIds); }catch(e){ return; }
+  const chars = ids.map(findCharById).filter(Boolean);
+  const includedCount = chars.filter(c => !c.excluded).length;
+  const allExcluded = includedCount === 0;
+
+  const countEl = groupCard.querySelector('.series-count');
+  if(countEl) countEl.textContent = `${includedCount}/${chars.length}`;
+
+  const toggleBtn = groupCard.querySelector('[data-action="toggle-group"]');
+  if(toggleBtn){
+    toggleBtn.textContent = allExcluded ? 'Enable All' : 'Disable All';
+    toggleBtn.classList.toggle('btn-danger', allExcluded);
+    toggleBtn.classList.toggle('btn-primary', !allExcluded);
+  }
+  if(!getData().ui.showDeselected){
+    groupCard.style.display = includedCount > 0 ? '' : 'none';
+  }
+}
+
+function updateNoterStats(){
+  const data = getData();
+  const seriesSet = new Set(data.characters.map(c => c.series));
+  const totalChars = data.characters.length;
+  const includedChars = data.characters.filter(c => !c.excluded).length;
+
+  document.getElementById('noterStats').innerHTML = `
+    <div class="stat-item"><div class="stat-label">Total Series</div><div class="stat-value">${seriesSet.size}</div></div>
+    <div class="stat-item"><div class="stat-label">Total Characters</div><div class="stat-value">${totalChars}</div></div>
+    <div class="stat-item"><div class="stat-label">Included Characters</div><div class="stat-value">${includedChars}</div></div>
+  `;
+}
+
+function scrollToTop(){ window.scrollTo({top:0, behavior:'smooth'}); }
+function scrollToCommands(){
+  const el = document.getElementById('commands');
+  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function copyCommand(btn, command){
+  navigator.clipboard.writeText(command).then(()=>{
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.background = '#28a745';
+    setTimeout(()=>{ btn.textContent = orig; btn.style.background = ''; }, 2000);
+  });
+}
+
+function buildCommandsFromGroups(groupedByKey, prefix, suffixFn, keyLabel){
+  const container = document.getElementById('commands').querySelector('.commands-section');
+  const sortedKeys = Object.keys(groupedByKey).sort((a,b)=>a.localeCompare(b));
+  let total = 0;
+
+  for(const key of sortedKeys){
+    const chars = groupedByKey[key];
+    total += chars.length;
+    const allNames = chars.map(c => c.name);
+    const suffix = suffixFn(key);
+
+    let commandParts = [];
+    let current = '';
+    for(const name of allNames){
+      const sep = current ? '$' : '';
+      const next = current + sep + name;
+      if((prefix.length + next.length + suffix.length) > 1990){
+        commandParts.push(prefix + current + suffix);
+        current = name;
+      } else {
+        current = next;
+      }
+    }
+    if(current) commandParts.push(prefix + current + suffix);
+
+    commandParts.forEach((command, idx) => {
+      const item = document.createElement('div');
+      item.className = 'command-item';
+      let headerText = `${keyLabel}: ${key || 'None'} - ${allNames.length} character${allNames.length>1?'s':''}`;
+      if(commandParts.length > 1) headerText += ` (Part ${idx+1}/${commandParts.length})`;
+      item.innerHTML = `
+        <div class="command-header"><div class="command-series">${escapeHTML(headerText)}</div></div>
+        <div class="command-text">${escapeHTML(command)}</div>
+        <button class="btn-sm btn-primary" onclick="copyCommand(this, \`${command.replace(/`/g,'\\`')}\`)">Copy Command</button>`;
+      container.appendChild(item);
+    });
+  }
+  return total;
+}
+
+function generateNoteCommands(){
+  const commandsDiv = document.getElementById('commands');
+  commandsDiv.innerHTML = `<div class="commands-section"><h2 style="display:flex; justify-content:space-between; align-items:center;">Generated <span class="cmd-chip" style="color:#fff;background:#5b21b6;">$n</span> Note Commands<button onclick="scrollToTop()" class="btn-sm btn-primary">Go to Top ↑</button></h2></div>`;
+
+  const allCards = document.querySelectorAll('#seriesGrid .character-card:not(.excluded)');
+  const orderedChars = Array.from(allCards).map(card => findCharById(card.dataset.charId)).filter(Boolean);
+
+  const byNote = {};
+  orderedChars.forEach(c => {
+    const note = c.note ? c.note.trim() : '';
+    if(!byNote[note]) byNote[note] = [];
+    byNote[note].push(c);
+  });
+
+  const total = buildCommandsFromGroups(byNote, '$n ', (note) => note ? ` $ ${note}` : '', 'Note');
+
+  if(total === 0){
+    const container = commandsDiv.querySelector('.commands-section');
+    const p = document.createElement('p');
+    p.style.cssText = 'color:var(--text-faint); padding:20px;';
+    p.textContent = 'No commands to generate. Please select at least one character.';
+    container.appendChild(p);
+  }
+  document.getElementById('goToCommandsBtn').style.display = total > 0 ? 'inline-block' : 'none';
+}
+
+function generateColorCommands(){
+  const commandsDiv = document.getElementById('commands');
+  commandsDiv.innerHTML = `<div class="commands-section"><h2 style="display:flex; justify-content:space-between; align-items:center;">Generated <span class="cmd-chip" style="color:#fff;background:#5b21b6;">$ec</span> Color Commands<button onclick="scrollToTop()" class="btn-sm btn-primary">Go to Top ↑</button></h2></div>`;
+
+  const allCards = document.querySelectorAll('#seriesGrid .character-card:not(.excluded)');
+  const orderedChars = Array.from(allCards).map(card => findCharById(card.dataset.charId)).filter(Boolean);
+
+  const byColor = {};
+  orderedChars.forEach(c => {
+    if(!c.color) return;
+    const color = c.color.trim().toLowerCase();
+    if(!byColor[color]) byColor[color] = [];
+    byColor[color].push(c);
+  });
+
+  const total = buildCommandsFromGroups(byColor, '$ec ', (color) => ` $ ${color}`, 'Color');
+
+  if(total === 0){
+    const container = commandsDiv.querySelector('.commands-section');
+    const p = document.createElement('p');
+    p.style.cssText = 'color:var(--text-faint); padding:20px;';
+    p.textContent = 'No characters with a custom color selected to generate commands.';
+    container.appendChild(p);
+  }
+  document.getElementById('goToCommandsBtn').style.display = total > 0 ? 'inline-block' : 'none';
+}
+
+function applyFilter(){
+  const data = getData();
+  if(data.characters.length === 0) return;
+
+  if(data.preFilterCharacterStates === null){
+    data.preFilterCharacterStates = {};
+    data.characters.forEach(c => { data.preFilterCharacterStates[c.id] = c.excluded; });
+  }
+
+  const minKakera = parseInt(document.getElementById('min-kakera').value) || 0;
+  const maxKakera = parseInt(document.getElementById('max-kakera').value) || Infinity;
+  const minKeys = parseInt(document.getElementById('min-keys').value) || 0;
+  const maxKeys = parseInt(document.getElementById('max-keys').value) || Infinity;
+  const genderFilter = document.getElementById('filter-gender').value;
+  const rouletteFilter = document.getElementById('filter-roulette').value;
+  const ownerFilter = document.getElementById('filter-owner').value;
+
+  data.characters.forEach(char => {
+    const charKakera = parseInt(char.kakera) || 0;
+    const charKeys = parseInt(char.keys) || 0;
+    const matchesKakera = charKakera >= minKakera && charKakera <= maxKakera;
+    const matchesKeys = charKeys >= minKeys && charKeys <= maxKeys;
+
+    const genders = new Set();
+    (char.mudaeTags||[]).forEach(tag => { const g = tag[0].toLowerCase(); if(g==='w'||g==='h') genders.add(g); });
+    const hasWaifu = genders.has('w'), hasHusbando = genders.has('h');
+    let matchesGender = true;
+    switch(genderFilter){
+      case 'has_waifu': matchesGender = hasWaifu; break;
+      case 'has_husbando': matchesGender = hasHusbando; break;
+      case 'only_waifu': matchesGender = hasWaifu && !hasHusbando; break;
+      case 'only_husbando': matchesGender = hasHusbando && !hasWaifu; break;
+      case 'genderless': matchesGender = !hasWaifu && !hasHusbando; break;
+    }
+
+    const roulettes = new Set();
+    (char.mudaeTags||[]).forEach(tag => { if(tag.length>1){ const r = tag[1].toLowerCase(); if(r==='a'||r==='g') roulettes.add(r); } });
+    const hasAnimanga = roulettes.has('a'), hasGame = roulettes.has('g');
+    let matchesRoulette = true;
+    switch(rouletteFilter){
+      case 'has_animanga': matchesRoulette = hasAnimanga; break;
+      case 'has_game': matchesRoulette = hasGame; break;
+      case 'only_animanga': matchesRoulette = hasAnimanga && !hasGame; break;
+      case 'only_game': matchesRoulette = hasGame && !hasAnimanga; break;
+      case 'both': matchesRoulette = hasAnimanga && hasGame; break;
+    }
+
+    const matchesOwner = (ownerFilter === 'any') || (char.owner === ownerFilter);
+    const matchesFilter = matchesKakera && matchesKeys && matchesGender && matchesRoulette && matchesOwner;
+    if(!matchesFilter) char.excluded = true;
+  });
+
+  displaySeries();
+  updateNoterStats();
+  saveStore();
+}
+
+function clearFilter(){
+  document.getElementById('min-kakera').value = '';
+  document.getElementById('max-kakera').value = '';
+  document.getElementById('min-keys').value = '';
+  document.getElementById('max-keys').value = '';
+  document.getElementById('filter-gender').value = 'any';
+  document.getElementById('filter-roulette').value = 'any';
+  document.getElementById('filter-owner').value = 'any';
+
+  const data = getData();
+  if(data.preFilterCharacterStates === null) return;
+
+  data.characters.forEach(c => {
+    if(c.id in data.preFilterCharacterStates) c.excluded = data.preFilterCharacterStates[c.id];
+  });
+  data.preFilterCharacterStates = null;
+
+  displaySeries();
+  updateNoterStats();
+  saveStore();
+}
+
+function populateOwnerFilter(){
+  const owners = new Set();
+  getData().characters.forEach(c => { if(c.owner) owners.add(c.owner); });
+  const filterOwner = document.getElementById('filter-owner');
+  const currentVal = filterOwner.value;
+  filterOwner.innerHTML = '<option value="any">Any</option>';
+  Array.from(owners).sort().forEach(owner => {
+    const option = document.createElement('option');
+    option.value = owner;
+    option.textContent = owner;
+    filterOwner.appendChild(option);
+  });
+  filterOwner.value = currentVal;
+}
+
+function showPlayerStats(){
+  const data = getData();
+  const playerStats = {};
+  const defaultOwner = 'No Owner';
+
+  data.characters.forEach(char => {
+    const owner = char.owner ? char.owner : defaultOwner;
+    if(!playerStats[owner]){
+      playerStats[owner] = { total:0, animanga:0, game:0, both:0, neither:0, waifu:0, husbando:0, genderBoth:0, genderNeither:0 };
+    }
+    playerStats[owner].total++;
+
+    const roulettes = new Set(), genders = new Set();
+    (char.mudaeTags||[]).forEach(tag => {
+      if(tag.length>1){ const r = tag[1].toLowerCase(); if(r==='a'||r==='g') roulettes.add(r); }
+      const g = tag[0].toLowerCase(); if(g==='w'||g==='h') genders.add(g);
+    });
+
+    const hasAnimanga = roulettes.has('a'), hasGame = roulettes.has('g');
+    const hasWaifu = genders.has('w'), hasHusbando = genders.has('h');
+
+    if(hasAnimanga && hasGame) playerStats[owner].both++;
+    else if(hasAnimanga) playerStats[owner].animanga++;
+    else if(hasGame) playerStats[owner].game++;
+    else playerStats[owner].neither++;
+
+    if(hasWaifu && hasHusbando) playerStats[owner].genderBoth++;
+    else if(hasWaifu) playerStats[owner].waifu++;
+    else if(hasHusbando) playerStats[owner].husbando++;
+    else playerStats[owner].genderNeither++;
+  });
+
+  const players = Object.keys(playerStats);
+  if(players.length === 0){ showNoterMessage('No character data found to display stats.', 'error'); return; }
+
+  const colors = ['#a78bfa','#4ade80','#fb923c','#38bdf8','#f472b6','#fbbf24','#ec4899','#8b5cf6'];
+
+  document.getElementById('seriesGrid').style.display = 'none';
+  document.getElementById('commands').style.display = 'none';
+  const section = document.getElementById('playerStatsSection');
+  section.style.display = 'block';
+
+  let svg = `<svg class="compass-svg" viewBox="-50 -50 700 700" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-width:600px;">
+    <defs><filter id="glow"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect x="50" y="50" width="500" height="500" fill="none" stroke="#7c3aed" stroke-width="1"/>
+    <line x1="300" y1="50" x2="300" y2="550" stroke="#2a2a3a" stroke-width="2"/>
+    <line x1="50" y1="300" x2="550" y2="300" stroke="#2a2a3a" stroke-width="2"/>
+    <line x1="50" y1="175" x2="550" y2="175" stroke="#2a2a3a" stroke-width="1" opacity="0.8" stroke-dasharray="5,5"/>
+    <line x1="50" y1="425" x2="550" y2="425" stroke="#2a2a3a" stroke-width="1" opacity="0.8" stroke-dasharray="5,5"/>
+    <line x1="175" y1="50" x2="175" y2="550" stroke="#2a2a3a" stroke-width="1" opacity="0.8" stroke-dasharray="5,5"/>
+    <line x1="425" y1="50" x2="425" y2="550" stroke="#2a2a3a" stroke-width="1" opacity="0.8" stroke-dasharray="5,5"/>
+    <text x="300" y="30" text-anchor="middle" fill="#a78bfa" font-size="16" font-weight="bold">Animanga</text>
+    <text x="300" y="585" text-anchor="middle" fill="#ffcb70" font-size="16" font-weight="bold">Game</text>
+    <text x="25" y="305" text-anchor="middle" fill="#ff8f8f" font-size="16" font-weight="bold">Waifu</text>
+    <text x="575" y="305" text-anchor="middle" fill="#8fafff" font-size="16" font-weight="bold">Husbando</text>`;
+
+  let legendHTML = '';
+  players.forEach((player, idx) => {
+    const stats = playerStats[player];
+    const color = player === defaultOwner ? '#6b7280' : colors[idx % colors.length];
+
+    const animangaCount = stats.animanga + (stats.both * 0.5);
+    const gameCount = stats.game + (stats.both * 0.5);
+    const waifuCount = stats.waifu + (stats.genderBoth * 0.5);
+    const husbandoCount = stats.husbando + (stats.genderBoth * 0.5);
+
+    const animangaPct = stats.total > 0 ? animangaCount/stats.total : 0;
+    const gamePct = stats.total > 0 ? gameCount/stats.total : 0;
+    const waifuPct = stats.total > 0 ? waifuCount/stats.total : 0;
+    const husbandoPct = stats.total > 0 ? husbandoCount/stats.total : 0;
+
+    const y = 300 - (animangaPct*250) + (gamePct*250);
+    const x = 300 - (waifuPct*250) + (husbandoPct*250);
+
+    svg += `<circle cx="${x}" cy="${y}" r="8" fill="${color}" stroke="white" stroke-width="2" filter="url(#glow)"/>`;
+    svg += `<text x="${x}" y="${y-15}" text-anchor="middle" fill="${color}" font-size="14" font-weight="bold" filter="url(#glow)">${escapeHTML(player)}</text>`;
+
+    legendHTML += `<div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <div style="width:14px; height:14px; border-radius:3px; background-color:${color}; flex-shrink:0;"></div>
+      <div><div style="font-weight:700;">${escapeHTML(player)}</div>
+      <div style="font-size:0.78em; color:var(--text-faint);">A: ${(animangaPct*100).toFixed(1)}% | G: ${(gamePct*100).toFixed(1)}% | W: ${(waifuPct*100).toFixed(1)}% | H: ${(husbandoPct*100).toFixed(1)}%</div></div>
+    </div>`;
+  });
+  svg += '</svg>';
+
+  section.innerHTML = `
+    <div style="text-align:center;">
+      <h2 style="color:var(--accent-light); margin-bottom:16px;">Player Compass</h2>
+      <div style="display:flex; justify-content:center;">${svg}</div>
+      <div style="max-width:500px; margin:20px auto; text-align:left;">${legendHTML}</div>
+      <button class="btn-primary" onclick="hidePlayerStats()">Back to Characters</button>
+    </div>`;
+  section.scrollIntoView({behavior:'smooth'});
+}
+
+function hidePlayerStats(){
+  document.getElementById('playerStatsSection').style.display = 'none';
+  document.getElementById('seriesGrid').style.display = '';
+  document.getElementById('commands').style.display = '';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ---- Noter event delegation ---- */
+document.getElementById('seriesGrid').addEventListener('click', (e) => {
+  const target = e.target;
+  const action = target.dataset.action;
+  const card = target.closest('.character-card');
+  const groupCard = target.closest('.series-card');
+
+  if(!action && card){
+    toggleCharacterById(card.dataset.charId);
+    return;
+  }
+
+  if(card && (action === 'edit-note' || action === 'edit-rank')){
+    e.stopPropagation();
+    const char = findCharById(card.dataset.charId);
+    if(!char) return;
+    target.style.display = 'none';
+
+    const input = document.createElement('input');
+    input.type = (action === 'edit-rank') ? 'number' : 'text';
+    input.className = (action === 'edit-rank') ? 'rank-input' : 'note-editor-input';
+    input.value = (action === 'edit-rank') ? (char.rank > 0 ? char.rank : '') : char.note;
+
+    if(action === 'edit-rank') card.prepend(input);
+    else target.parentNode.insertBefore(input, target);
+
+    input.focus();
+    input.select();
+
+    const saveAndClose = () => {
+      const newValue = input.value;
+      let needsFullRender = false;
+      if(action === 'edit-rank'){
+        char.rank = parseInt(newValue) > 0 ? parseInt(newValue) : 0;
+        target.textContent = char.rank > 0 ? char.rank : '#';
+        needsFullRender = true;
+      } else {
+        char.note = newValue.trim();
+        if(getData().ui.grouping === 'note'){
+          needsFullRender = true;
+        } else {
+          const hasNote = char.note && char.note.trim() !== '';
+          target.textContent = hasNote ? char.note : 'No note!';
+          target.title = hasNote ? char.note : 'Click to add note';
+          target.style.color = hasNote ? '#9ca3af' : '#dc2626';
+          target.style.fontWeight = hasNote ? 'normal' : 'bold';
+        }
+      }
+      if(input.parentNode) input.parentNode.removeChild(input);
+      target.style.display = '';
+      saveStore();
+      if(needsFullRender) displaySeries();
+    };
+    input.onblur = saveAndClose;
+    input.onkeydown = (ev) => { if(ev.key === 'Enter') saveAndClose(); };
+    return;
+  }
+
+  if(!groupCard || !action) return;
+
+  const getGroupChars = () => {
+    try{ return JSON.parse(groupCard.dataset.charIds).map(findCharById).filter(Boolean); }
+    catch(e){ return []; }
+  };
+
+  switch(action){
+    case 'toggle-group':
+    case 'invert-group': {
+      const isToggle = action === 'toggle-group';
+      const allCurrentlyExcluded = getGroupChars().every(c => c.excluded);
+      groupCard.querySelectorAll('.character-card').forEach(cardEl => {
+        const ch = findCharById(cardEl.dataset.charId);
+        if(!ch) return;
+        const newExcludedState = isToggle ? !allCurrentlyExcluded : !ch.excluded;
+        if(ch.excluded !== newExcludedState){
+          ch.excluded = newExcludedState;
+          cardEl.classList.toggle('excluded', newExcludedState);
+          if(!getData().ui.showDeselected) cardEl.classList.toggle('hidden-char', newExcludedState);
+        }
+      });
+      updateGroupUI(groupCard);
+      break;
+    }
+    case 'sort': {
+      const sortBy = target.dataset.sortBy;
+      const isAlreadyActive = target.classList.contains('active');
+      const groupChars = getGroupChars();
+      const sortFns = {
+        original: (a,b) => (a.sortOrder||0) - (b.sortOrder||0),
+        az: (a,b) => a.name.localeCompare(b.name),
+        rank: (a,b) => (a.rank||999999) - (b.rank||999999),
+        kakera: (a,b) => parseInt(b.kakera||0) - parseInt(a.kakera||0),
+        keys: (a,b) => parseInt(b.keys||0) - parseInt(a.keys||0)
+      };
+      groupChars.sort(sortFns[sortBy]);
+
+      if(getData().ui.rankingEnabled && isAlreadyActive){
+        groupChars.forEach((c, idx) => { c.rank = idx + 1; });
+        saveStore();
+      }
+
+      groupCard.querySelector('.characters-list').innerHTML = groupChars.map(c => createCharacterCardHTML(c)).join('');
+      groupCard.querySelectorAll('[data-action="sort"]').forEach(b => b.classList.remove('active'));
+      target.classList.add('active');
+      break;
+    }
+    case 'bulk-note':
+    case 'bulk-color': {
+      const isNote = action === 'bulk-note';
+      const applyTo = target.dataset.target;
+      const inputSelector = isNote ? '.note-input' : '.color-hex-input';
+      const input = target.closest('.bulk-apply-group').querySelector(inputSelector);
+      const newValue = input.value;
+
+      if(!isNote && newValue.trim() !== '' && !/^#([0-9a-fA-F]{3}){1,2}$/.test(newValue)){
+        showNoterMessage('Invalid hex color format. Use #RRGGBB.', 'error');
+        return;
+      }
+      getGroupChars().forEach(ch => {
+        const applies = (applyTo === 'all') || (applyTo === 'selected' && !ch.excluded);
+        if(applies){
+          if(isNote) ch.note = newValue;
+          else ch.color = newValue.trim();
+        }
+      });
+      input.value = '';
+      if((isNote && getData().ui.grouping === 'note') || (!isNote && getData().ui.grouping === 'color')){
+        displaySeries();
+      } else {
+        groupCard.querySelector('.characters-list').innerHTML = getGroupChars().map(c => createCharacterCardHTML(c)).join('');
+      }
+      break;
+    }
+  }
+  updateNoterStats();
+  saveStore();
+});
+
+document.getElementById('seriesGrid').addEventListener('input', (e) => {
+  if(e.target.classList.contains('color-picker-input')){
+    const swatch = e.target.closest('.color-swatch-btn');
+    const hexInput = swatch ? swatch.nextElementSibling : null;
+    if(swatch) swatch.style.background = e.target.value;
+    if(hexInput && hexInput.classList.contains('color-hex-input')) hexInput.value = e.target.value;
+  } else if(e.target.classList.contains('color-hex-input')){
+    const swatch = e.target.previousElementSibling;
+    const colorPicker = swatch ? swatch.querySelector('input.color-picker-input') : null;
+    const val = e.target.value.trim();
+    if(/^#([0-9a-fA-F]{6})$/i.test(val)){
+      if(swatch) swatch.style.background = val;
+      if(colorPicker) colorPicker.value = val;
+    }
   }
 });
 
-function saveProfile(){
-  const data = {
-    items: items,
-    selectedImages: selectedImages
-  };
+/* =========================================================================
+   WISHLIST TAB
+   ========================================================================= */
 
-  const blob = new Blob(
-    [JSON.stringify(data, null, 2)],
-    {type:"application/json"}
-  );
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "mudae-profile.json";
-  a.click();
-  URL.revokeObjectURL(url);
-  
-  autosave();
-}
-
-function loadProfile(event){
-  const file = event.target.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(e){
-    const data = JSON.parse(e.target.result);
-
-    items = data.items || [];
-    selectedImages = data.selectedImages || {};
-    wishlist = data.wishlist || [];
-    groups = data.groups || [];
-    nextGroupId = data.nextGroupId || 0;
-
-    renderGrid();
-    renderGroups();
-    renderWishlist();
-    renderCiButtons();
-    updateCiProgress();
-    
-    autosave();
-  };
-  reader.readAsText(file);
-}
-
-/* ================= WISHLIST SYSTEM ================= */
-
-let wishlist = [];
 let draggedWishIndex = null;
 
 function parseWishlist(){
-  const raw=document.getElementById("wishlistInput").value.trim().split("\n");
-  wishlist=[];
-
-  raw.forEach(line=>{
+  const raw = document.getElementById('wishlistInput').value.trim().split('\n');
+  const data = getData();
+  data.wishlist = [];
+  raw.forEach(line => {
     if(!line.trim()) return;
-
-    let name=line.replace(/⭐|✅|❌|\+\d+%/g,"").trim();
-
-    wishlist.push({
-      name,
-      star:line.includes("⭐"),
-      owned:line.includes("✅"),
-      sphereLevel:0
-    });
+    let name = line.replace(/⭐|✅|❌|\+\d+%/g, '').trim();
+    data.wishlist.push({ name, star: line.includes('⭐'), owned: line.includes('✅'), sphereLevel: 0, image: null });
   });
-
-  autosave();
+  saveStore();
   renderWishlist();
+  showToast(`Parsed ${data.wishlist.length} wishlist entries`);
 }
 
-function renderWishlist(){
 function calculateWishlistSummary(){
+  const wishlist = getData().wishlist;
   const len = wishlist.length;
-  let totalReceived = 0;
-  let totalGiven = 0;
-
+  let totalReceived = 0, totalGiven = 0;
   wishlist.forEach((char, index) => {
     const prev = wishlist[(index - 1 + len) % len];
     const next = wishlist[(index + 1) % len];
+    totalReceived += ((prev?.sphereLevel||0) + (next?.sphereLevel||0)) * 15;
+    totalGiven += char.sphereLevel * 15;
+  });
+  document.getElementById('wishlistSummary').textContent =
+    len ? `Total Received Boost: +${totalReceived}% | Total Given Boost: +${totalGiven}%` : '';
+}
 
-    const received = ((prev?.sphereLevel || 0) + (next?.sphereLevel || 0)) * 15;
+function renderWishlist(){
+  const wishlist = getData().wishlist;
+  const container = document.getElementById('wishlistContainer');
+  container.innerHTML = '';
+  const len = wishlist.length;
+
+  wishlist.forEach((char, index) => {
+    const div = document.createElement('div');
+    div.className = 'wishlist-item';
+    div.draggable = true;
+    div.ondragstart = () => { draggedWishIndex = index; };
+    div.ondragover = (e) => e.preventDefault();
+    div.ondrop = () => {
+      const moved = wishlist.splice(draggedWishIndex, 1)[0];
+      wishlist.splice(index, 0, moved);
+      saveStore();
+      renderWishlist();
+    };
+
+    const prev = wishlist[(index-1+len)%len];
+    const next = wishlist[(index+1)%len];
+    const received = ((prev?.sphereLevel||0) + (next?.sphereLevel||0)) * 15;
     const given = char.sphereLevel * 15;
 
-    totalReceived += received;
-    totalGiven += given;
-  });
+    const left = document.createElement('div');
+    left.innerHTML = `<strong>${escapeHTML(char.name)}</strong>
+      <div class="boost-info">${char.owned ? 'Owned ✅ | ' : ''}Receives: +${received}% | Gives: +${given}% | Sphere: ${char.sphereLevel}/5</div>`;
 
-  document.getElementById("wishlistSummary").textContent =
-    `Total Received Boost: +${totalReceived}% | Total Given Boost: +${totalGiven}%`;
-}
-  const container=document.getElementById("wishlistContainer");
-  container.innerHTML="";
-  const len=wishlist.length;
+    const controls = document.createElement('div');
+    controls.className = 'wishlist-controls';
 
-  wishlist.forEach((char,index)=>{
-    const div=document.createElement("div");
-    div.className="wishlist-item";
-    div.draggable=true;
+    const starBtn = document.createElement('button');
+    starBtn.textContent = char.star ? '⭐' : '☆';
+    starBtn.onclick = () => { char.star = !char.star; saveStore(); renderWishlist(); };
 
-    div.ondragstart=e=>draggedWishIndex=index;
-    div.ondragover=e=>e.preventDefault();
-    div.ondrop=e=>{
-      const moved=wishlist.splice(draggedWishIndex,1)[0];
-      wishlist.splice(index,0,moved);
-      autosave();
-      renderWishlist();
-    };
+    const ownedBtn = document.createElement('button');
+    ownedBtn.textContent = char.owned ? '✅' : '❌';
+    ownedBtn.onclick = () => { char.owned = !char.owned; saveStore(); renderWishlist(); };
 
-    const prev=wishlist[(index-1+len)%len];
-    const next=wishlist[(index+1)%len];
+    const minus = document.createElement('button');
+    minus.textContent = '-';
+    minus.onclick = () => { if(char.sphereLevel>0) char.sphereLevel--; saveStore(); renderWishlist(); };
 
-    const received=((prev?.sphereLevel||0)+(next?.sphereLevel||0))*15;
-    const given=char.sphereLevel*15;
+    const plus = document.createElement('button');
+    plus.textContent = '+';
+    plus.onclick = () => { if(char.sphereLevel<5) char.sphereLevel++; saveStore(); renderWishlist(); };
 
-    const left=document.createElement("div");
-    left.innerHTML=`
-      <strong>${char.name}</strong>
-      <div class="boost-info">
-      ${char.owned ? "Owned ✅ | " : ""}
-      Receives: +${received}% |
-      Gives: +${given}% |
-      Sphere: ${char.sphereLevel}/5
-      </div>
-    `;
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = '🗑';
+    removeBtn.title = 'Remove from wishlist';
+    removeBtn.className = 'btn-danger';
+    removeBtn.onclick = () => { wishlist.splice(index,1); saveStore(); renderWishlist(); };
 
-    const controls=document.createElement("div");
-    controls.className="wishlist-controls";
-
-    const starBtn=document.createElement("button");
-    starBtn.textContent=char.star?"⭐":"☆";
-    starBtn.onclick=()=>{
-      char.star = !char.star;
-      autosave();
-      renderWishlist();
-    };
-
-    const ownedBtn=document.createElement("button");
-    ownedBtn.textContent=char.owned?"✅":"❌";
-    ownedBtn.onclick=()=>{char.owned=!char.owned;autosave();renderWishlist();};
-
-    const minus=document.createElement("button");
-    minus.textContent="-";
-    minus.onclick=()=>{if(char.sphereLevel>0)char.sphereLevel--;autosave();renderWishlist();};
-
-    const plus=document.createElement("button");
-    plus.textContent="+";
-    plus.onclick=()=>{if(char.sphereLevel<5)char.sphereLevel++;autosave();renderWishlist();};
-
-    const removeBtn=document.createElement("button");
-    removeBtn.textContent="🗑";
-    removeBtn.title="Remove from wishlist";
-    removeBtn.style.background="#c00";
-    removeBtn.style.color="#fff";
-    removeBtn.onclick=()=>{
-      wishlist.splice(index,1);
-      autosave();
-      renderWishlist();
-    };
-
-    controls.appendChild(starBtn);
-    controls.appendChild(ownedBtn);
-    controls.appendChild(minus);
-    controls.appendChild(plus);
-    controls.appendChild(removeBtn);
-
-    div.appendChild(left);
-    div.appendChild(controls);
+    controls.append(starBtn, ownedBtn, minus, plus, removeBtn);
+    div.append(left, controls);
     container.appendChild(div);
   });
-  
-  calculateWishlistSummary();  
+
+  calculateWishlistSummary();
 }
 
+let wishlistCommandList = [];
+let wishlistCommandIndex = 0;
+
 function generateWishlistCommands(){
+  const wishlist = getData().wishlist;
   if(wishlist.length === 0) return;
 
-  // Step 1: $swr everything that is starwished
   const starwished = wishlist.filter(c => c.star).map(c => c.name);
-  // Step 2: $wr everything
   const allNames = wishlist.map(c => c.name);
-  // Step 3: $wish everything again (including new stuff)
-  // Step 4: $sw everything that is starwished
-  // Step 5: $wishi order everything how it should be
 
   wishlistCommandList = [];
-  if(starwished.length > 0)
-    wishlistCommandList.push("$swr " + starwished.join("$") + "$");
-  wishlistCommandList.push("$wr " + allNames.join("$") + "$" );
-  wishlistCommandList.push("$wish " + allNames.join("$") + "$" );
-  if(starwished.length > 0)
-    wishlistCommandList.push("$sw " + starwished.join("$") + "$" );
-  wishlistCommandList.push("$wishi " + allNames.join("$") + "$" );
+  if(starwished.length > 0) wishlistCommandList.push('$swr ' + starwished.join('$') + '$');
+  wishlistCommandList.push('$wr ' + allNames.join('$') + '$');
+  wishlistCommandList.push('$wish ' + allNames.join('$') + '$');
+  if(starwished.length > 0) wishlistCommandList.push('$sw ' + starwished.join('$') + '$');
+  wishlistCommandList.push('$wishi ' + allNames.join('$') + '$');
 
   wishlistCommandIndex = 0;
   renderWishlistCommands();
@@ -1114,19 +2825,15 @@ function generateWishlistCommands(){
 }
 
 function renderWishlistCommands(){
-  const container = document.getElementById("wishlistCommandContainer");
-  const stepsEl = document.getElementById("wishlistSteps");
-  container.innerHTML = "";
-  stepsEl.innerHTML = "";
+  const container = document.getElementById('wishlistCommandContainer');
+  const stepsEl = document.getElementById('wishlistSteps');
+  container.innerHTML = '';
+  stepsEl.innerHTML = '';
 
   wishlistCommandList.forEach((cmd, i) => {
-    const btn = document.createElement("button");
+    const btn = document.createElement('button');
     btn.textContent = cmd;
-    btn.style.display = "block";
-    btn.style.width = "100%";
-    btn.style.marginBottom = "6px";
-    btn.dataset.index = i;
-
+    btn.style.cssText = 'display:block; width:100%; margin-bottom:6px; text-align:left; word-break:break-all;';
     btn.onclick = () => {
       navigator.clipboard.writeText(cmd);
       wishlistCommandIndex = i + 1;
@@ -1134,12 +2841,11 @@ function renderWishlistCommands(){
       updateWishlistProgress();
       flashButton(btn);
     };
-
     container.appendChild(btn);
 
-    const li = document.createElement("li");
+    const li = document.createElement('li');
     li.textContent = `${cmd} — Click the button above to copy and paste into chat.`;
-    li.style.marginBottom = "6px";
+    li.style.marginBottom = '6px';
     stepsEl.appendChild(li);
   });
 
@@ -1149,284 +2855,32 @@ function renderWishlistCommands(){
 
 function copyNextWishlistCommand(){
   if(wishlistCommandIndex >= wishlistCommandList.length) return;
-
-  const cmd = wishlistCommandList[wishlistCommandIndex];
-  navigator.clipboard.writeText(cmd);
-
-  const buttons = document.querySelectorAll("#wishlistCommandContainer button");
-  const currentBtn = buttons[wishlistCommandIndex];
-  if(currentBtn) flashButton(currentBtn);
-
+  navigator.clipboard.writeText(wishlistCommandList[wishlistCommandIndex]);
+  const buttons = document.querySelectorAll('#wishlistCommandContainer button');
+  if(buttons[wishlistCommandIndex]) flashButton(buttons[wishlistCommandIndex]);
   wishlistCommandIndex++;
   highlightWishlistCommand();
   updateWishlistProgress();
 }
 
 function highlightWishlistCommand(){
-  const buttons = document.querySelectorAll("#wishlistCommandContainer button");
-  const lis = document.querySelectorAll("#wishlistSteps li");
-
-  buttons.forEach((btn, i) => {
-    btn.style.outline = (i === wishlistCommandIndex) ? "2px solid #00bfff" : "none";
+  document.querySelectorAll('#wishlistCommandContainer button').forEach((btn,i) => {
+    btn.style.outline = (i === wishlistCommandIndex) ? '2px solid #00bfff' : 'none';
   });
-
-  lis.forEach((li, i) => {
-    li.style.fontWeight = (i === wishlistCommandIndex) ? "700" : "400";
+  document.querySelectorAll('#wishlistSteps li').forEach((li,i) => {
+    li.style.fontWeight = (i === wishlistCommandIndex) ? '700' : '400';
   });
 }
-
 function updateWishlistProgress(){
-  const progress = document.getElementById("wishlistProgress");
-  progress.textContent = `Progress: ${wishlistCommandIndex} / ${wishlistCommandList.length}`;
+  document.getElementById('wishlistProgress').textContent = `Progress: ${wishlistCommandIndex} / ${wishlistCommandList.length}`;
 }
 
-/* Extend Save WITHOUT breaking original */
+function searchWishlistCharacter(){
+  const name = document.getElementById('wishlistCharSearchInput').value.trim();
+  const resultsBox = document.getElementById('wishlistCharSearchResults');
+  if(!name){ resultsBox.innerHTML = 'Please enter a character name.'; return; }
+  resultsBox.innerHTML = 'Searching...';
 
-const oldSaveProfile = saveProfile;
-saveProfile = function(){
-  const data = {
-    items: items,
-    selectedImages: selectedImages,
-    wishlist: wishlist,
-    groups: groups,
-    nextGroupId: nextGroupId
-  };
-
-  const blob = new Blob(
-    [JSON.stringify(data, null, 2)],
-    {type:"application/json"}
-  );
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "mudae-profile.json";
-  a.click();
-  URL.revokeObjectURL(url);
-  
-  autosave();
-};
-
-const oldLoadProfile = loadProfile;
-loadProfile = function(event){
-  const file = event.target.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(e){
-    const data = JSON.parse(e.target.result);
-
-    items = data.items || [];
-    selectedImages = data.selectedImages || {};
-    wishlist = data.wishlist || [];
-    groups = data.groups || [];
-    nextGroupId = data.nextGroupId || 0;
-
-    renderGrid();
-    renderGroups();
-    renderWishlist();
-    renderCiButtons();
-    updateCiProgress();
-    
-    autosave();
-  };
-  reader.readAsText(file);
-};
-
-/* ================= AUTOSAVE SYSTEM ================= */
-
-function autosave(){
-  const data = {
-    items: items,
-    selectedImages: selectedImages,
-    wishlist: wishlist,
-    groups: groups,
-    nextGroupId: nextGroupId
-  };
-  localStorage.setItem("mudae-autosave", JSON.stringify(data));
-}
-
-function loadAutosave(){
-  const saved = localStorage.getItem("mudae-autosave");
-  if(saved){
-    try{
-      const data = JSON.parse(saved);
-      items = data.items || [];
-      selectedImages = data.selectedImages || {};
-      wishlist = data.wishlist || [];
-      groups = data.groups || [];
-      nextGroupId = data.nextGroupId || 0;
-      
-      renderGrid();
-      renderGroups();
-      renderWishlist();
-      renderCiButtons();
-      updateCiProgress();
-    }catch(err){
-      console.log("Autosave load failed");
-    }
-  }
-}
-
-function clearAutosave(){
-  localStorage.removeItem("mudae-autosave");
-}
-
-/* ================= ADD NEW CHARACTERS ================= */
-
-function addNewCharacters(){
-  const raw = document.getElementById("addNewInput").value.trim().split("\n");
-  pushGridState();
-  const existingNames = items.map(item => item.name.split("|")[0].trim().toLowerCase());
-  let added = 0;
-  raw.forEach(line => {
-    if(!line.trim()) return;
-    let namePart = line;
-    let image = null;
-    const dashIndex = line.indexOf(" - ");
-    if(dashIndex !== -1){
-      namePart = line.substring(0, dashIndex).trim();
-      image = line.substring(dashIndex + 3).trim();
-    }
-    const cleanName = namePart.split("|")[0].trim().toLowerCase();
-    // Only add if not already in list
-    if(!existingNames.includes(cleanName)){
-      items.push({
-        name: namePart,
-        image: image || null
-      });
-      added++;
-    }
-  });
-  
-  alert(`Added ${added} new character${added !== 1 ? 's' : ''}`);
-  renderGrid();
-  autosave();
-}
-
-// Load autosave and gallery cache on page load
-window.addEventListener("DOMContentLoaded", function(){
-  loadGalleryCache();
-  loadAutosave();
-  // capture initial grid state for undo baseline
-  undoStack = [];
-  redoStack = [];
-  pushGridState();
-});
-
-/* ================= GROUP SYSTEM ================= */
-
-function createGroup(){
-  const name = document.getElementById("groupNameInput").value.trim();
-  const color = document.getElementById("groupColorInput").value;
-  
-  if(!name){
-    alert("Please enter a group name");
-    return;
-  }
-  pushGridState();
-
-  groups.push({
-    id: nextGroupId++,
-    name: name,
-    color: color,
-    memberIndices: []
-  });
-  
-  document.getElementById("groupNameInput").value = "";
-  document.getElementById("groupColorInput").value = "#444444";
-  
-  renderGroups();
-  autosave();
-}
-
-function renderGroups(){
-  const container = document.getElementById("groupsContainer");
-  container.innerHTML = "";
-  
-  groups.forEach(group => {
-    const div = document.createElement("div");
-    div.style.cssText = `
-      background:${group.color}40;
-      border:2px solid ${group.color};
-      border-radius:6px;
-      padding:8px 12px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    `;
-    
-    const label = document.createElement("span");
-    label.textContent = `${group.name} (${group.memberIndices.length})`;
-    label.style.cssText = "flex:1; font-weight:bold;";
-    
-    const colorBtn = document.createElement("button");
-    colorBtn.textContent = "🎨";
-    colorBtn.style.cssText = "padding:2px 6px; font-size:12px;";
-    colorBtn.onclick = () => {
-      const newColor = prompt("Enter color (hex):", group.color);
-      if(newColor){
-        group.color = newColor;
-        renderGroups();
-        renderGrid();
-        autosave();
-        pushGridState();
-      }
-    };
-    
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "✕";
-    deleteBtn.style.cssText = "padding:2px 6px; font-size:12px; background:#c00;";
-    deleteBtn.onclick = () => {
-      pushGridState();
-      groups = groups.filter(g => g.id !== group.id);
-      renderGroups();
-      renderGrid();
-      autosave();
-    };
-    
-    div.appendChild(label);
-    div.appendChild(colorBtn);
-    div.appendChild(deleteBtn);
-    container.appendChild(div);
-  });
-}
-
-function addToGroup(itemIndex, groupId){
-  const group = groups.find(g => g.id === groupId);
-  if(!group) return;
-  pushGridState();
-
-  if(!group.memberIndices.includes(itemIndex)){
-    group.memberIndices.push(itemIndex);
-    autosave();
-    renderGrid();
-  }
-}
-
-function removeFromGroup(itemIndex){
-  pushGridState();
-  groups.forEach(group => {
-    group.memberIndices = group.memberIndices.filter(i => i !== itemIndex);
-  });
-  autosave();
-  renderGrid();
-}
-
-function getGroupForItem(itemIndex){
-  return groups.find(g => g.memberIndices.includes(itemIndex));
-}
-
-window.searchWishlistCharacter = function() {
-  const name = document.getElementById("wishlistCharSearchInput").value.trim();
-  const resultsBox = document.getElementById("wishlistCharSearchResults");
-  resultsBox.innerHTML = "Searching...";
-  if (!name) {
-    resultsBox.innerHTML = "Please enter a character name.";
-    return;
-  }
-
-  // Use Mudae's site and proxies to fetch character page
   const encoded = encodeURIComponent(name);
   const targetURL = `https://mudae.net/character/${encoded}`;
   const proxies = [
@@ -1437,69 +2891,239 @@ window.searchWishlistCharacter = function() {
 
   let found = false;
   (async () => {
-    for (let proxy of proxies) {
-      try {
+    for(const proxy of proxies){
+      try{
         const resp = await fetch(proxy);
         const text = await resp.text();
-        if (text.includes("/uploads/")) {
+        if(text.includes('/uploads/')){
           const parser = new DOMParser();
-          const doc = parser.parseFromString(text, "text/html");
-          let images = [...doc.querySelectorAll("img")]
-            .map(img => img.src)
-            .filter(src => src.includes("/uploads/"));
+          const doc = parser.parseFromString(text, 'text/html');
+          let images = [...doc.querySelectorAll('img')].map(img => img.src).filter(src => src.includes('/uploads/'));
           images = [...new Set(images)];
 
-          // Get official name from site
           let officialName = name;
-          const nameElem = doc.querySelector(".character-title, h1, .title, .name");
-          if (nameElem && nameElem.textContent) {
-            officialName = nameElem.textContent.trim();
-          } else {
-            // fallback: try page title
-            const pageTitle = doc.querySelector("title");
-            if(pageTitle && pageTitle.textContent) {
-              officialName = pageTitle.textContent.replace(/ - Mudae.*/,"").trim();
-            }
+          const nameElem = doc.querySelector('.character-title, h1, .title, .name');
+          if(nameElem && nameElem.textContent) officialName = nameElem.textContent.trim();
+          else{
+            const pageTitle = doc.querySelector('title');
+            if(pageTitle && pageTitle.textContent) officialName = pageTitle.textContent.replace(/ - Mudae.*/,'').trim();
           }
 
-          resultsBox.innerHTML = "";
-          if (images.length === 0) {
-            resultsBox.innerHTML = "No images found.";
-            return;
-          }
+          resultsBox.innerHTML = '';
+          if(images.length === 0){ resultsBox.innerHTML = 'No images found.'; return; }
 
-          // Only show the first image
           const src = images[0];
-          const img = document.createElement("img");
+          const img = document.createElement('img');
           img.src = src;
-          img.style.width = "120px";
-          img.style.margin = "6px";
-          img.style.border = "2px solid #333";
-          img.style.cursor = "pointer";
+          img.style.cssText = 'width:120px; margin:6px; border:2px solid var(--border2); border-radius:6px; cursor:pointer;';
           img.title = `Select this image for '${officialName}'`;
           img.onclick = () => {
-            wishlist.push({
-              name: officialName,
-              star: false,
-              owned: false,
-              sphereLevel: 0,
-              image: src
-            });
-            autosave();
+            getData().wishlist.push({ name: officialName, star:false, owned:false, sphereLevel:0, image: src });
+            saveStore();
             renderWishlist();
-            resultsBox.innerHTML = `<span style='color:#2ecc71'>Added '${officialName}' to wishlist!</span>`;
+            resultsBox.innerHTML = `<span style="color:var(--green)">Added '${escapeHTML(officialName)}' to wishlist!</span>`;
           };
           resultsBox.appendChild(img);
-
           found = true;
           break;
         }
-      } catch (e) {}
+      }catch(e){}
     }
-    if (!found) resultsBox.innerHTML = "No results found or failed to fetch.";
+    if(!found) resultsBox.innerHTML = 'No results found or failed to fetch.';
   })();
 }
-</script>
 
+/* =========================================================================
+   QUICK NOTES (floating panel)
+   ========================================================================= */
+
+function toggleQuickNotesPanel(){
+  document.getElementById('quickNotesPanel').classList.toggle('show');
+}
+
+function displayQuickNotes(){
+  const list = document.getElementById('quickNotesList');
+  list.innerHTML = '';
+  const isColorCode = /^#([0-9a-fA-F]{3}){1,2}$/;
+
+  getData().quickNotes.forEach((note, idx) => {
+    const noteEl = document.createElement('div');
+    noteEl.className = 'quick-note';
+    noteEl.onclick = (e) => {
+      if(e.target.classList.contains('quick-note-remove')) return;
+      navigator.clipboard.writeText(note);
+      noteEl.classList.add('copied');
+      setTimeout(()=>noteEl.classList.remove('copied'), 150);
+    };
+
+    if(isColorCode.test(note)){
+      const dot = document.createElement('div');
+      dot.className = 'color-indicator';
+      dot.style.backgroundColor = note;
+      noteEl.appendChild(dot);
+    }
+    noteEl.appendChild(document.createTextNode(note));
+
+    const removeSpan = document.createElement('span');
+    removeSpan.className = 'quick-note-remove';
+    removeSpan.textContent = '×';
+    removeSpan.title = 'Remove';
+    removeSpan.onclick = (e) => { e.stopPropagation(); removeQuickNote(idx); };
+
+    noteEl.appendChild(document.createTextNode(' '));
+    noteEl.appendChild(removeSpan);
+    list.appendChild(noteEl);
+  });
+}
+
+function addQuickNote(){
+  const input = document.getElementById('newQuickNote');
+  const note = input.value.trim();
+  const data = getData();
+  if(note && data.quickNotes.indexOf(note) === -1){
+    data.quickNotes.push(note);
+    displayQuickNotes();
+    input.value = '';
+    saveStore();
+  }
+}
+function removeQuickNote(idx){
+  getData().quickNotes.splice(idx, 1);
+  displayQuickNotes();
+  saveStore();
+}
+document.getElementById('newQuickNote').addEventListener('keydown', (e) => { if(e.key === 'Enter') addQuickNote(); });
+
+/* =========================================================================
+   MASTER RENDER / INIT
+   ========================================================================= */
+
+function applyUiStateToControls(){
+  const ui = getData().ui;
+
+  document.querySelectorAll('#group-nogroup-btn,#group-series-btn,#group-note-btn,#group-color-btn,#group-keys-btn,#group-kakera-btn,#group-gender-btn,#group-roulette-btn,#group-owner-btn')
+    .forEach(b => b.classList.remove('active'));
+  const groupBtn = document.getElementById(`group-${ui.grouping}-btn`);
+  if(groupBtn) groupBtn.classList.add('active');
+  document.getElementById('kakera-range-container').style.display = ui.grouping === 'kakera' ? 'flex' : 'none';
+  document.getElementById('keys-range-container').style.display = ui.grouping === 'keys' ? 'flex' : 'none';
+
+  document.querySelectorAll('#sort-alpha-btn,#sort-count-btn').forEach(b => b.classList.remove('active'));
+  const sortBtn = document.getElementById(`sort-${ui.sortMethod}-btn`);
+  if(sortBtn) sortBtn.classList.add('active');
+
+  document.getElementById('ranking-on-btn').classList.toggle('active', ui.rankingEnabled);
+  document.getElementById('ranking-off-btn').classList.toggle('active', !ui.rankingEnabled);
+
+  for(let i=1;i<=4;i++){ const b = document.getElementById(`grid-btn-${i}`); if(b) b.classList.remove('active'); }
+  const colBtn = document.getElementById(`grid-btn-${ui.preferredColumns}`);
+  if(colBtn) colBtn.classList.add('active');
+  const grid = document.getElementById('seriesGrid');
+  if(grid) grid.style.gridTemplateColumns = `repeat(${ui.preferredColumns}, minmax(300px, 1fr))`;
+
+  document.getElementById('deselected-show-btn').classList.toggle('active', ui.showDeselected);
+  document.getElementById('deselected-hide-btn').classList.toggle('active', !ui.showDeselected);
+  document.getElementById('disabled-icon-show-btn').classList.toggle('active', ui.showDisabledIcon);
+  document.getElementById('disabled-icon-hide-btn').classList.toggle('active', !ui.showDisabledIcon);
+  document.body.classList.toggle('hide-disabled-emoji', !ui.showDisabledIcon);
+
+  document.getElementById('fit-on-btn').classList.toggle('active', ui.fitToScreen);
+  document.getElementById('fit-off-btn').classList.toggle('active', !ui.fitToScreen);
+  document.body.classList.toggle('fit-width', ui.fitToScreen);
+}
+
+function renderEverything(){
+  renderProfileSelect();
+  applyUiStateToControls();
+  populateOwnerFilter();
+  displayQuickNotes();
+
+  renderSorterGrid();
+  renderGroups();
+
+  const hasChars = getData().characters.length > 0;
+  document.getElementById('generateNoteBtn').disabled = !hasChars;
+  document.getElementById('generateColorBtn').disabled = !hasChars;
+  document.getElementById('playerStatsBtn').disabled = !hasChars;
+  document.getElementById('commands').innerHTML = '';
+  document.getElementById('goToCommandsBtn').style.display = 'none';
+  document.getElementById('playerStatsSection').style.display = 'none';
+  document.getElementById('seriesGrid').style.display = '';
+  document.getElementById('commands').style.display = '';
+  displaySeries();
+  updateNoterStats();
+
+  renderWishlist();
+
+  undoStack = [];
+  redoStack = [];
+  pushGridState();
+}
+
+window.addEventListener('DOMContentLoaded', function(){
+  loadGalleryCache();
+  loadStoreFromDisk();
+  renderEverything();
+});
+
+/* =========================================================================
+   SNAPSHOT
+   ========================================================================= */
+
+async function snapshotGrid(which){
+  const btn = document.querySelector(`button[onclick="snapshotGrid('${which}')"]`);
+  const origText = btn.textContent;
+  btn.textContent = 'Rendering...';
+  btn.disabled = true;
+
+  try{
+    // Make sure the right tab is visible for capture
+    const targetId = which === 'sorter' ? 'sorterGrid' : 'seriesGrid';
+    const el = document.getElementById(targetId);
+
+    // Temporarily switch to the target tab so html2canvas can see it
+    const wasActive = document.getElementById(which === 'sorter' ? 'page-sorter' : 'page-noter').classList.contains('active');
+    if(!wasActive){
+      document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+      document.getElementById(which === 'sorter' ? 'page-sorter' : 'page-noter').style.display = 'block';
+    }
+
+    const profileName = getData().name || 'collection';
+    const filename = `${profileName}_${which}_${new Date().toISOString().slice(0,10)}.png`;
+
+    const canvas = await html2canvas(el, {
+      backgroundColor: '#0a0a0f',
+      useCORS: true,
+      allowTaint: true,
+      scale: 1,
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: el.scrollWidth,
+      windowHeight: el.scrollHeight,
+      width: el.scrollWidth,
+      height: el.scrollHeight,
+    });
+
+    // Restore display if we switched tabs
+    if(!wasActive){
+      document.querySelectorAll('.page').forEach(p => p.style.display = '');
+      document.getElementById(which === 'sorter' ? 'page-sorter' : 'page-noter').style.display = 'none';
+    }
+
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast(`Saved ${filename}`);
+  } catch(e){
+    showToast('Snapshot failed: ' + e.message, true);
+    console.error(e);
+  }
+
+  btn.textContent = origText;
+  btn.disabled = false;
+}
+</script>
 </body>
 </html>

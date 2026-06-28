@@ -8,8 +8,24 @@
 <link rel="icon" type="image/png" href="https://cdn.imgchest.com/files/59a3ca5bc2d6.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vibrant.js/1.0.0/Vibrant.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/dist/gifuct-js.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gif.js.optimized@0.1.6/dist/gif.js"></script>
+<script type="module">
+  // Load gifuct-js as an ES module — guaranteed named exports, no global name guessing
+  try {
+    const { parseGIF, decompressFrames } = await import('https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/dist/gifuct-js.umd.js');
+    window.parseGIF = parseGIF;
+    window.decompressFrames = decompressFrames;
+  } catch(e) {
+    // Fallback: try the ESM build
+    try {
+      const mod = await import('https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/+esm');
+      window.parseGIF = mod.parseGIF;
+      window.decompressFrames = mod.decompressFrames;
+    } catch(e2) {
+      console.warn('gifuct-js failed to load:', e2);
+    }
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.js"></script>
 <style>
 :root{
   --bg:#0a0a0f;
@@ -861,7 +877,20 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
     <div id="wishlistCommandContainer"></div>
     <div id="wishlistProgress" style="margin-top:8px; opacity:0.8; font-size:0.9em;"></div>
     <ol id="wishlistSteps" style="margin-top:8px; padding-left:18px; color:#ddd; font-size:0.88em;"></ol>
-    <button class="btn-primary" onclick="copyNextWishlistCommand()" style="margin-top:8px;">Copy Next Wishlist Command</button>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
+      <button class="btn-primary" onclick="copyNextWishlistCommand()">Copy Next Wishlist Command</button>
+      <button onclick="downloadWishlistAhk()">⬇️ Download AHK Script</button>
+      <div class="info-icon" style="width:auto; height:auto; border-radius:6px; padding:4px 8px; font-size:0.8em; font-weight:400; background:var(--panel2); border:1px solid var(--border2); color:var(--text-dim); white-space:nowrap;">
+        ❓ What does this do?
+        <span class="tooltip" style="width:300px; left:0; transform:none; top:130%;">
+          <strong style="color:var(--accent-light);">AutoHotKey v2 Script</strong><br><br>
+          Downloads a <code style="background:#2a2a3a; padding:1px 4px; border-radius:3px;">.ahk</code> file that automatically types and sends each wishlist command into Discord — one every 3 seconds — so you don't have to paste them all manually.<br><br>
+          <strong style="color:#facc15;">Requires AutoHotkey v2</strong> (free):<br>
+          <span style="color:var(--accent-light);">autohotkey.com/download</span><br><br>
+          Make sure Discord is open and focused before running the script. Move your mouse or press a key to stop it early.
+        </span>
+      </div>
+    </div>
   </div>
 
   <div class="card-panel" id="wishlistAddCharBox">
@@ -901,9 +930,18 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   <div class="card-panel" id="colorResultsPanel" style="display:none;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
       <h3 style="font-weight:700; color:var(--accent-light); margin:0;">Results</h3>
-      <div style="display:flex; gap:8px;">
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <button onclick="downloadColorAhk()">⬇️ Download AHK Script</button>
-        <button class="btn-primary" onclick="copyAllColorCommands()">Copy All $ec Commands</button>
+        <div class="info-icon" style="width:auto; height:auto; border-radius:6px; padding:4px 8px; font-size:0.8em; font-weight:400; background:var(--panel2); border:1px solid var(--border2); color:var(--text-dim); white-space:nowrap;">
+          ❓ What does this do?
+          <span class="tooltip" style="width:300px; left:0; transform:none; top:130%;">
+            <strong style="color:var(--accent-light);">AutoHotKey v2 Script</strong><br><br>
+            Downloads a <code style="background:#2a2a3a; padding:1px 4px; border-radius:3px;">.ahk</code> file that automatically types and sends each <code style="background:#2a2a3a; padding:1px 4px; border-radius:3px;">$ec</code> color command into Discord — one every 2 seconds — so you don't have to paste them manually.<br><br>
+            <strong style="color:#facc15;">Requires AutoHotkey v2</strong> (free):<br>
+            <span style="color:var(--accent-light);">autohotkey.com/download</span><br><br>
+            Make sure Discord is open and focused before running the script. Move your mouse or press a key to stop it early.
+          </span>
+        </div>
       </div>
     </div>
     <div id="colorResults"></div>
@@ -2898,11 +2936,11 @@ function generateWishlistCommands(){
   const allNames = wishlist.map(c => c.name);
 
   wishlistCommandList = [];
-  if(starwished.length > 0) wishlistCommandList.push('$swr ' + starwished.join('$') + '$');
-  wishlistCommandList.push('$wr ' + allNames.join('$') + '$');
-  wishlistCommandList.push('$wish ' + allNames.join('$') + '$');
-  if(starwished.length > 0) wishlistCommandList.push('$sw ' + starwished.join('$') + '$');
-  wishlistCommandList.push('$wishi ' + allNames.join('$') + '$');
+  if(starwished.length > 0) wishlistCommandList.push('$swr ' + starwished.join('$'));
+  wishlistCommandList.push('$wr ' + allNames.join('$'));
+  wishlistCommandList.push('$wish ' + allNames.join('$'));
+  if(starwished.length > 0) wishlistCommandList.push('$sw ' + starwished.join('$'));
+  wishlistCommandList.push('$wishi ' + allNames.join('$'));
 
   wishlistCommandIndex = 0;
   renderWishlistCommands();
@@ -2958,6 +2996,46 @@ function highlightWishlistCommand(){
 }
 function updateWishlistProgress(){
   document.getElementById('wishlistProgress').textContent = `Progress: ${wishlistCommandIndex} / ${wishlistCommandList.length}`;
+}
+
+function downloadWishlistAhk(){
+  if(!wishlistCommandList.length){ showToast('Generate wishlist commands first', true); return; }
+  const cmdLines = wishlistCommandList.map(c => `  "${c.replace(/"/g, '\\"')}",`).join('\n');
+  const script = `#Requires AutoHotkey v2.0
+
+InstallMouseHook()
+InstallKeybdHook()
+
+commandList := [
+${cmdLines}
+]
+
+if not WinExist("Discord") {
+  MsgBox("Discord not found, exiting")
+  return
+}
+
+WinActivate()
+sleep(2000)
+
+Ptime := A_TimeIdlePhysical
+Ktime := A_TimeIdleKeyboard
+Mtime := A_TimeIdleMouse
+for command in commandList {
+  if A_TimeIdlePhysical < Ptime or A_TimeIdleKeyboard < Ktime or A_TimeIdleMouse < Mtime {
+    Break
+  }
+  SendText(command)
+  Send("{Enter}")
+  sleep(3000)
+}
+`;
+  const blob = new Blob([script], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mudae-wishlist.ahk';
+  a.click();
+  showToast('Downloaded mudae-wishlist.ahk');
 }
 
 function searchWishlistCharacter(){
@@ -3441,11 +3519,11 @@ async function loadGifFromUrl(url){
 async function loadGifFromArrayBuffer(buf, name){
   setCropperStatus('Decoding GIF frames...');
   try{
-    // gifuct-js UMD exposes parseGIF and decompressFrames directly on window
-    const parseGIF = window.gifuct?.parseGIF || window.parseGIF;
-    const decompressFrames = window.gifuct?.decompressFrames || window.decompressFrames;
+    // gifuct-js is loaded via dynamic import() into window.parseGIF / window.decompressFrames
+    const parseGIF = window.parseGIF;
+    const decompressFrames = window.decompressFrames;
     if(!parseGIF || !decompressFrames){
-      setCropperStatus('GIF decoder not loaded — try a file upload or reload the page', true);
+      setCropperStatus('GIF decoder not available — please reload the page and try again', true);
       return;
     }
     const gif = parseGIF(buf);
@@ -3583,56 +3661,248 @@ async function downloadCropped(){
 }
 
 async function downloadCroppedGif(sx, sy, sw, sh){
-  setCropperStatus('Encoding GIF... this may take a moment');
   const frames = cropState.gifFrames;
+  const total = frames.length;
+  const btn = document.getElementById('cropDownloadBtn');
 
-  const gifEncoder = new GIF({
-    workers: 2,
-    quality: 10,
-    width: CROP_W,
-    height: CROP_H,
-    workerScript: 'https://cdn.jsdelivr.net/npm/gif.js.optimized@0.1.6/dist/gif.worker.js',
-  });
-
-  // We need to reconstruct each frame with the full image including disposal
-  let compositeCanvas = document.createElement('canvas');
+  // Composite canvas (full source size, for disposal)
+  const compositeCanvas = document.createElement('canvas');
   compositeCanvas.width = cropState.srcW;
   compositeCanvas.height = cropState.srcH;
-  let compCtx = compositeCanvas.getContext('2d');
+  const compCtx = compositeCanvas.getContext('2d');
 
-  for(const frame of frames){
+  // Output canvas (cropped size)
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = CROP_W; outCanvas.height = CROP_H;
+  const outCtx = outCanvas.getContext('2d');
+
+  // Build RGBA pixel array for every frame
+  const frameDataList = [];
+  for(let i = 0; i < total; i++){
+    const frame = frames[i];
+
+    setCropperStatus(`Compositing frame ${i+1} / ${total}...`);
+    // yield to browser so the status actually renders
+    if(i % 10 === 0) await new Promise(r => setTimeout(r, 0));
+
+    // Draw this frame's patch onto the composite
     const frameCanvas = document.createElement('canvas');
     frameCanvas.width = frame.dims.width;
     frameCanvas.height = frame.dims.height;
     const fCtx = frameCanvas.getContext('2d');
-    const imageData = new ImageData(new Uint8ClampedArray(frame.patch), frame.dims.width, frame.dims.height);
-    fCtx.putImageData(imageData, 0, 0);
+    fCtx.putImageData(new ImageData(new Uint8ClampedArray(frame.patch), frame.dims.width, frame.dims.height), 0, 0);
 
-    // Handle disposal
     if(frame.disposalType === 2){
       compCtx.clearRect(frame.dims.left, frame.dims.top, frame.dims.width, frame.dims.height);
     }
     compCtx.drawImage(frameCanvas, frame.dims.left, frame.dims.top);
 
-    // Crop from composite
-    const outCanvas = document.createElement('canvas');
-    outCanvas.width = CROP_W; outCanvas.height = CROP_H;
-    const outCtx = outCanvas.getContext('2d');
+    // Crop to output size
+    outCtx.clearRect(0, 0, CROP_W, CROP_H);
     outCtx.drawImage(compositeCanvas, sx, sy, sw, sh, 0, 0, CROP_W, CROP_H);
 
-    gifEncoder.addFrame(outCanvas, { delay: frame.delay || 100, copy: true });
+    const rgba = outCtx.getImageData(0, 0, CROP_W, CROP_H).data;
+    frameDataList.push({ rgba, delay: frame.delay || 100 });
   }
 
-  gifEncoder.on('finished', blob => {
+  setCropperStatus(`Encoding ${total} frames...`);
+  await new Promise(r => setTimeout(r, 0));
+
+  try {
+    // --- Quantise + encode with omggif ---
+    const bufSize = CROP_W * CROP_H * total * 5 + 1024;
+    const buf = new Uint8Array(bufSize);
+    const encoder = new GifWriter(buf, CROP_W, CROP_H, { loop: 0 });
+
+    for(let i = 0; i < total; i++){
+      if(i % 20 === 0){
+        setCropperStatus(`Encoding frame ${i+1} / ${total}...`);
+        await new Promise(r => setTimeout(r, 0));
+      }
+      const { rgba, delay } = frameDataList[i];
+      const { indexed, palette } = quantiseFrame(rgba, CROP_W * CROP_H);
+      encoder.addFrame(0, 0, CROP_W, CROP_H, indexed, {
+        palette,
+        delay: Math.round(delay / 10), // omggif uses centiseconds
+        disposal: 1,
+      });
+    }
+
+    const bytes = buf.slice(0, encoder.end());
+    const blob = new Blob([bytes], { type: 'image/gif' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'mudae_cropped.gif';
     a.click();
-    setCropperStatus(`Done — ${frames.length} frames encoded`);
+    setCropperStatus(`✅ Done — ${total} frames encoded`);
     showToast('Downloaded cropped GIF');
-  });
+  } catch(e) {
+    setCropperStatus('Encoding failed: ' + e.message, true);
+    console.error(e);
+  }
 
-  gifEncoder.render();
+  btn.textContent = '⬇️ Download Cropped';
+  btn.disabled = false;
+}
+
+// Quantiser with proper median-cut palette + Floyd-Steinberg dithering
+function quantiseFrame(rgba, pixelCount){
+  const MAX_COLORS = 256;
+  const W = CROP_W, H = CROP_H;
+
+  // --- 1. Build palette via median-cut ---
+  const palette = medianCut(rgba, pixelCount, MAX_COLORS); // returns [[r,g,b], ...]
+
+  // --- 2. Build a fast k-d tree lookup for nearest-palette-colour ---
+  const kdTree = buildKdTree(palette);
+
+  // --- 3. Floyd-Steinberg dithering ---
+  // Work on a float copy so we can accumulate error
+  const fr = new Float32Array(pixelCount);
+  const fg = new Float32Array(pixelCount);
+  const fb = new Float32Array(pixelCount);
+  for(let i = 0; i < pixelCount; i++){
+    fr[i] = rgba[i*4];
+    fg[i] = rgba[i*4+1];
+    fb[i] = rgba[i*4+2];
+  }
+
+  const indexed = new Uint8Array(pixelCount);
+  for(let y = 0; y < H; y++){
+    for(let x = 0; x < W; x++){
+      const i = y * W + x;
+      const r = Math.max(0, Math.min(255, fr[i]));
+      const g = Math.max(0, Math.min(255, fg[i]));
+      const b = Math.max(0, Math.min(255, fb[i]));
+
+      const pi = nearestColor(kdTree, r, g, b);
+      indexed[i] = pi;
+
+      const pr = palette[pi][0], pg = palette[pi][1], pb = palette[pi][2];
+      const er = r - pr, eg = g - pg, eb = b - pb;
+
+      // Distribute error to neighbours
+      if(x+1 < W){
+        fr[i+1]     += er * 7/16;
+        fg[i+1]     += eg * 7/16;
+        fb[i+1]     += eb * 7/16;
+      }
+      if(y+1 < H){
+        if(x > 0){
+          fr[i+W-1]  += er * 3/16;
+          fg[i+W-1]  += eg * 3/16;
+          fb[i+W-1]  += eb * 3/16;
+        }
+        fr[i+W]    += er * 5/16;
+        fg[i+W]    += eg * 5/16;
+        fb[i+W]    += eb * 5/16;
+        if(x+1 < W){
+          fr[i+W+1]  += er * 1/16;
+          fg[i+W+1]  += eg * 1/16;
+          fb[i+W+1]  += eb * 1/16;
+        }
+      }
+    }
+  }
+
+  // Convert palette to omggif format (0xRRGGBB numbers, padded to 256)
+  const palOut = new Array(MAX_COLORS).fill(0);
+  palette.forEach(([r,g,b], i) => { palOut[i] = (r<<16)|(g<<8)|b; });
+
+  return { indexed, palette: palOut };
+}
+
+// --- Median-cut colour quantiser ---
+function medianCut(rgba, pixelCount, maxColors){
+  // Collect unique colours as [r,g,b] with counts
+  const map = new Map();
+  for(let i = 0; i < pixelCount; i++){
+    const r = rgba[i*4], g = rgba[i*4+1], b = rgba[i*4+2];
+    const key = (r<<16)|(g<<8)|b;
+    map.set(key, (map.get(key)||0) + 1);
+  }
+  // Initial box = all colours
+  let boxes = [{ colors: [...map.keys()].map(k=>[(k>>16)&255,(k>>8)&255,k&255]) }];
+
+  while(boxes.length < maxColors){
+    // Find largest box by range
+    let bestBox = -1, bestRange = -1;
+    for(let b = 0; b < boxes.length; b++){
+      const range = boxRange(boxes[b].colors);
+      if(range > bestRange){ bestRange = range; bestBox = b; }
+    }
+    if(bestRange === 0) break;
+    const box = boxes.splice(bestBox, 1)[0];
+    const [b1, b2] = splitBox(box.colors);
+    boxes.push({ colors: b1 }, { colors: b2 });
+  }
+
+  return boxes.map(box => boxAverage(box.colors));
+}
+
+function boxRange(colors){
+  let minR=255,maxR=0,minG=255,maxG=0,minB=255,maxB=0;
+  for(const [r,g,b] of colors){
+    if(r<minR)minR=r; if(r>maxR)maxR=r;
+    if(g<minG)minG=g; if(g>maxG)maxG=g;
+    if(b<minB)minB=b; if(b>maxB)maxB=b;
+  }
+  return Math.max(maxR-minR, maxG-minG, maxB-minB);
+}
+
+function splitBox(colors){
+  // Find widest channel, sort on it, split at median
+  let minR=255,maxR=0,minG=255,maxG=0,minB=255,maxB=0;
+  for(const [r,g,b] of colors){
+    if(r<minR)minR=r; if(r>maxR)maxR=r;
+    if(g<minG)minG=g; if(g>maxG)maxG=g;
+    if(b<minB)minB=b; if(b>maxB)maxB=b;
+  }
+  const rr=maxR-minR, rg=maxG-minG, rb=maxB-minB;
+  const ch = rr>=rg && rr>=rb ? 0 : rg>=rb ? 1 : 2;
+  colors.sort((a,b)=>a[ch]-b[ch]);
+  const mid = colors.length>>1;
+  return [colors.slice(0,mid), colors.slice(mid)];
+}
+
+function boxAverage(colors){
+  let r=0,g=0,b=0;
+  for(const c of colors){ r+=c[0]; g+=c[1]; b+=c[2]; }
+  const n=colors.length;
+  return [Math.round(r/n), Math.round(g/n), Math.round(b/n)];
+}
+
+// --- Simple k-d tree for fast nearest-colour lookup ---
+function buildKdTree(palette){
+  const nodes = palette.map((c,i)=>({c,i}));
+  return kdBuild(nodes, 0);
+}
+function kdBuild(nodes, depth){
+  if(!nodes.length) return null;
+  const ch = depth % 3;
+  nodes.sort((a,b)=>a.c[ch]-b.c[ch]);
+  const mid = nodes.length>>1;
+  return {
+    c: nodes[mid].c, i: nodes[mid].i, ch,
+    left:  kdBuild(nodes.slice(0,mid),   depth+1),
+    right: kdBuild(nodes.slice(mid+1),   depth+1),
+  };
+}
+function nearestColor(node, r, g, b){
+  let best = { dist: Infinity, i: 0 };
+  kdSearch(node, r, g, b, best);
+  return best.i;
+}
+function kdSearch(node, r, g, b, best){
+  if(!node) return;
+  const [nr,ng,nb] = node.c;
+  const d = (r-nr)**2 + (g-ng)**2 + (b-nb)**2;
+  if(d < best.dist){ best.dist = d; best.i = node.i; }
+  const diff = [r,g,b][node.ch] - node.c[node.ch];
+  const near = diff < 0 ? node.left : node.right;
+  const far  = diff < 0 ? node.right : node.left;
+  kdSearch(near, r, g, b, best);
+  if(diff*diff < best.dist) kdSearch(far, r, g, b, best);
 }
 
 async function snapshotGrid(which){

@@ -225,6 +225,36 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   font-family:'Consolas', monospace;
   margin:0 2px;
 }
+.cmd-cat-group{ margin-bottom:18px; }
+.cmd-cat-title{
+  font-weight:700;
+  color:var(--accent-light);
+  font-size:0.95em;
+  margin-bottom:8px;
+  padding-bottom:4px;
+  border-bottom:1px solid var(--border2);
+}
+.cmd-row{
+  display:flex;
+  gap:10px;
+  align-items:baseline;
+  padding:6px 4px;
+  border-radius:6px;
+  font-size:0.88em;
+}
+.cmd-row:hover{ background:#24242e; }
+.cmd-row .cmd-chip{ flex-shrink:0; min-width:fit-content; cursor:pointer; }
+.cmd-row .cmd-tag{
+  font-size:0.7em;
+  color:var(--text-faint);
+  background:#1c1c26;
+  border:1px solid var(--border2);
+  padding:1px 5px;
+  border-radius:3px;
+  margin-left:6px;
+}
+.cmd-row .cmd-desc{ color:var(--text-dim); }
+
 .info-icon{
   display:inline-flex;
   align-items:center;
@@ -316,6 +346,43 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
 }
 .modal-box.small{ max-width:420px; }
 
+/* Tile right-click action menu — replaces native prompt() */
+.tile-action-menu{
+  position:fixed;
+  display:none;
+  background:var(--panel);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  padding:6px;
+  z-index:1100;
+  min-width:180px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.5);
+}
+.tile-action-menu.show{ display:block; }
+.tile-action-menu .menu-label{
+  font-size:0.72em;
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+  color:var(--text-faint);
+  padding:6px 8px 4px;
+}
+.tile-action-menu button{
+  display:block;
+  width:100%;
+  text-align:left;
+  background:transparent;
+  border:none;
+  padding:7px 8px;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:0.9em;
+  color:var(--text);
+}
+.tile-action-menu button:hover{ background:var(--panel2); }
+.tile-action-menu hr{ border:none; border-top:1px solid var(--border2); margin:4px 0; }
+.tile-action-menu .danger-item{ color:#ff6b6b; }
+.tile-action-menu .danger-item:hover{ background:#7f1d1d40; }
+
 .gallery-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
@@ -361,6 +428,25 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   cursor:pointer;
   border-radius:4px;
 }
+.delete-btn{
+  position:absolute;
+  top:6px;
+  right:6px;
+  background:#000c;
+  color:#ff6b6b;
+  width:20px;
+  height:20px;
+  line-height:20px;
+  text-align:center;
+  font-size:13px;
+  font-weight:bold;
+  cursor:pointer;
+  border-radius:4px;
+  opacity:0;
+  transition:opacity 0.15s;
+}
+.tile:hover .delete-btn{ opacity:1; }
+.delete-btn:hover{ background:#c0392b; color:#fff; }
 .group-container{
   display:flex;
   flex-wrap:wrap;
@@ -644,6 +730,7 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   <div class="tab" data-tab="wishlist" onclick="switchTab('wishlist')">💞 Wishlist</div>
   <div class="tab" data-tab="colors" onclick="switchTab('colors')">🎨 Colors</div>
   <div class="tab" data-tab="cropper" onclick="switchTab('cropper')">✂️ Cropper</div>
+  <div class="tab" data-tab="commands" onclick="switchTab('commands')">📖 Commands</div>
 </div>
 
 <!-- ===================== TOAST ===================== -->
@@ -705,6 +792,7 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
     <button onclick="redoGrid()">↷ Redo (Ctrl+Shift+Z)</button>
     <button class="btn-danger" onclick="clearGalleryCache()">🗑 Clear Image Cache</button>
     <button onclick="snapshotGrid('sorter')" title="Save a PNG image of your sorter tiles">📸 Snapshot Sorter</button>
+    <button onclick="openBannerModal()" title="Generate an animated scrolling banner GIF of your characters">🎬 Animated Banner</button>
   </div>
 
   <div class="grid" id="sorterGrid" style="display:flex; flex-wrap:wrap; gap:12px; align-content:flex-start;"></div>
@@ -868,8 +956,13 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
     <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
       <button class="btn-primary" onclick="parseWishlist()">Parse Wishlist</button>
       <button onclick="generateWishlistCommands()">Generate Wishlist Commands</button>
+      <button class="btn-danger" onclick="generateWishlistClearCommands()" title="Wipes your ENTIRE in-game wishlist using Mudae's own $wishremoveall command">🗑️ Clear Wishlist on Mudae</button>
     </div>
     <div id="wishlistSummary" style="margin-top:12px; font-weight:bold;"></div>
+    <div id="wishlistPendingChanges" style="margin-top:8px; font-size:0.85em;"></div>
+    <div style="margin-top:8px;">
+      <button class="btn-sm" onclick="resyncWishlistBaseline()" title="Use this if you already manually changed your wishlist in Discord, to stop the site from re-suggesting commands for changes that already happened.">🔄 Mark Current List as Already-Synced</button>
+    </div>
   </div>
 
   <div class="card-panel" id="wishlistCommandsBox">
@@ -994,6 +1087,24 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   </div>
 </div>
 
+<!-- ===================== COMMANDS TAB ===================== -->
+<div class="page" id="page-commands">
+  <div class="card-panel">
+    <h2 class="section-title">📖 Mudae Command Reference</h2>
+    <p style="color:var(--text-faint); font-size:0.88em; margin-bottom:14px;">
+      Full indexed list of Mudae bot commands ($help). Search by name or keyword, or browse by category.
+    </p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+      <input type="text" id="cmdSearchInput" placeholder="Search commands... (e.g. claim, kakera, divorce)" style="flex:1; min-width:220px;" oninput="renderCommandList()">
+      <select id="cmdCategoryFilter" onchange="renderCommandList()" style="background:#2a2a3a; color:var(--text); border:1px solid var(--border2); border-radius:6px; padding:8px 10px;">
+        <option value="">All Categories</option>
+      </select>
+    </div>
+    <div id="cmdResultCount" style="font-size:0.8em; color:var(--text-faint); margin-bottom:10px;"></div>
+    <div id="cmdListContainer"></div>
+  </div>
+</div>
+
 <!-- ===================== IMAGE GALLERY MODAL ===================== -->
 <div class="modal-overlay" id="galleryModal">
   <div class="modal-box">
@@ -1024,7 +1135,124 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   </div>
 </div>
 
+<!-- ===================== GENERIC CONFIRM MODAL =====================
+     NOTE FROM USER: native browser confirm()/prompt() popups ("this page says...")
+     are disliked — messy/inconsistent look, blocks the page weirdly, and can mess
+     with keyboard listeners (undo/redo stopped firing after a native confirm()).
+     Use THIS modal (showConfirm) instead of confirm() anywhere in this app. -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box small">
+    <h3 id="confirmModalTitle" style="color:var(--accent-light); margin-bottom:10px;">Are you sure?</h3>
+    <p id="confirmModalMessage" style="color:var(--text-dim); margin-bottom:18px; font-size:0.92em;"></p>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-secondary" style="flex:1;" onclick="_confirmModalResolve(false)">Cancel</button>
+      <button class="btn-danger" id="confirmModalOkBtn" style="flex:1;" onclick="_confirmModalResolve(true)">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== GENERIC TEXT PROMPT MODAL =====================
+     Same note as above — use showPrompt() instead of prompt(). -->
+<div class="modal-overlay" id="textPromptModal">
+  <div class="modal-box small">
+    <h3 id="textPromptModalTitle" style="color:var(--accent-light); margin-bottom:14px;">Enter a value</h3>
+    <input type="text" id="textPromptModalInput" style="width:100%; padding:9px; margin-bottom:14px;">
+    <div style="display:flex; gap:10px;">
+      <button class="btn-secondary" style="flex:1;" onclick="_textPromptModalResolve(null)">Cancel</button>
+      <button class="btn-primary" style="flex:1;" onclick="_textPromptModalResolve(document.getElementById('textPromptModalInput').value)">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TILE ACTION MENU =====================
+     Replaces the old prompt()-based right-click menu for tiles with a small
+     floating menu (group list + remove option). -->
+<div id="tileActionMenu" class="tile-action-menu"></div>
+
+<!-- ===================== WISHI (MOVE/INSERT) MODAL =====================
+     $wishi is a real Mudae subcommand (confirmed via $wish help text):
+       $wishi <position> $ <characters>            -- insert at slot number N
+       $wishi <reference character> $ <characters> -- insert right after that
+                                                        character
+     Auto-generated reorder commands (from drag-and-drop) use this under the
+     hood -- this modal is for manually forcing one character to a specific
+     spot without waiting for a full diff. -->
+<div class="modal-overlay" id="wishiModal">
+  <div class="modal-box small">
+    <button class="modal-close" onclick="closeWishiModal()">✕</button>
+    <h3 id="wishiModalTitle" style="color:var(--accent-light); margin-bottom:14px;">Move character</h3>
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button id="wishiModeByPosition" class="btn-secondary active" style="flex:1;" onclick="setWishiMode('position')">By position #</button>
+      <button id="wishiModeByReference" class="btn-secondary" style="flex:1;" onclick="setWishiMode('reference')">By reference char</button>
+    </div>
+    <div id="wishiPositionRow">
+      <label style="font-size:0.85em; color:var(--text-dim); display:block; margin-bottom:6px;">Insert at wishlist slot number:</label>
+      <input type="number" id="wishiPositionInput" min="1" placeholder="e.g. 3" style="width:100%; padding:9px; margin-bottom:14px;">
+    </div>
+    <div id="wishiReferenceRow" style="display:none;">
+      <label style="font-size:0.85em; color:var(--text-dim); display:block; margin-bottom:6px;">Insert right after this character (exact name as it appears in Mudae):</label>
+      <input type="text" id="wishiReferenceInput" placeholder="e.g. Kasane Teto" style="width:100%; padding:9px; margin-bottom:14px;">
+    </div>
+    <button class="btn-primary" onclick="submitWishiModal()" style="width:100%;">Add $wishi Command</button>
+  </div>
+</div>
+
+
+<!-- ===================== BANNER MODAL ===================== -->
+<div class="modal-overlay" id="bannerModal">
+  <div class="modal-box" style="max-width:540px;">
+    <button class="modal-close" onclick="document.getElementById('bannerModal').classList.remove('show')">✕</button>
+    <h3 style="color:var(--accent-light); margin-bottom:4px;">🎬 Animated Banner</h3>
+    <p style="font-size:0.83em; color:var(--text-faint); margin-bottom:16px;">Generates a scrolling GIF of all your characters playing their animations side by side.</p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+      <div class="filter-control">
+        <label>Strip height (px)</label>
+        <input type="number" id="bannerHeight" value="350" min="100" max="600" style="width:100%;">
+      </div>
+      <div class="filter-control">
+        <label>Card width (px)</label>
+        <input type="number" id="bannerCardW" value="225" min="60" max="400" style="width:100%;">
+      </div>
+      <div class="filter-control">
+        <label>Scroll speed (px/frame)</label>
+        <input type="number" id="bannerSpeed" value="3" min="1" max="20" style="width:100%;">
+      </div>
+      <div class="filter-control">
+        <label>Frame delay (ms)</label>
+        <input type="number" id="bannerFrameMs" value="50" min="20" max="200" style="width:100%;">
+      </div>
+      <div class="filter-control">
+        <label>Gap between cards (px)</label>
+        <input type="number" id="bannerGap" value="8" min="0" max="60" style="width:100%;">
+      </div>
+      <div class="filter-control">
+        <label>Background colour</label>
+        <input type="color" id="bannerBg" value="#0a0a0f" style="width:100%; height:34px; cursor:pointer; padding:2px;">
+      </div>
+    </div>
+
+    <div id="bannerStatus" style="font-size:0.85em; color:var(--text-faint); min-height:1.4em; margin-bottom:10px;"></div>
+    <div id="bannerPreviewWrap" style="display:none; margin-bottom:12px;">
+      <p style="font-size:0.8em; color:var(--text-faint); margin-bottom:6px;">Preview (first few characters):</p>
+      <canvas id="bannerPreviewCanvas" style="border:1px solid var(--border2); border-radius:6px; max-width:100%;"></canvas>
+    </div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn-primary" id="bannerGenBtn" onclick="generateBanner()">🎬 Generate Banner GIF</button>
+      <button id="bannerCancelBtn" onclick="cancelBanner()" style="display:none;">⏹ Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
+/* =========================================================================
+   NOTE FROM USER (workflow preference): I'm using AI to code this, so only
+   send back a result that is actually working — if you can sandbox/test
+   changes (e.g. headless DOM test, syntax check) before handing them back,
+   please do so rather than shipping something untested.
+   ========================================================================= */
+
 /* =========================================================================
    CORE DATA MODEL
    One character pool per profile. Each character carries everything both
@@ -1038,6 +1266,7 @@ function freshProfileData(){
     groups: [],            // Sorter's manual visual groups
     nextGroupId: 0,
     wishlist: [],
+    wishlistBaseline: [],  // snapshot of what's actually on Mudae right now (set on parse / after generating commands). Diffed against `wishlist` to know what changed.
     quickNotes: ['⭐', '✨', '💕', 'uft', '#fefefe', '#000000'],
     selectedImages: {},    // name -> chosen image index (for $ci)
     ui: {
@@ -1092,6 +1321,7 @@ function migrateLegacyAutosave(){
     fresh.characters = (data.items || []).map(it => itemToCharacter(it));
     fresh.selectedImages = data.selectedImages || {};
     fresh.wishlist = data.wishlist || [];
+    fresh.wishlistBaseline = fresh.wishlist.map(c => ({ name: c.name, star: !!c.star }));
     fresh.groups = data.groups || [];
     fresh.nextGroupId = data.nextGroupId || 0;
     const id = 'default';
@@ -1210,13 +1440,14 @@ function confirmDeleteProfile(){
     return;
   }
   const name = getActiveProfile().name;
-  if(!confirm(`Delete profile "${name}"? This can't be undone (unless you exported a backup).`)) return;
-
-  delete Store.profiles[Store.activeProfileId];
-  Store.activeProfileId = Object.keys(Store.profiles)[0];
-  saveStore();
-  renderEverything();
-  showToast(`Deleted "${name}"`);
+  showConfirm(`Delete profile "${name}"? This can't be undone (unless you exported a backup).`, 'Delete profile?').then(ok => {
+    if(!ok) return;
+    delete Store.profiles[Store.activeProfileId];
+    Store.activeProfileId = Object.keys(Store.profiles)[0];
+    saveStore();
+    renderEverything();
+    showToast(`Deleted "${name}"`);
+  });
 }
 
 function exportProfile(){
@@ -1273,12 +1504,14 @@ function importAllProfiles(event){
     try{
       const parsed = JSON.parse(e.target.result);
       if(!parsed.profiles || !Object.keys(parsed.profiles).length) throw new Error('bad format');
-      if(!confirm('This will replace ALL current profiles with the ones in this backup. Continue?')) return;
-      Store.profiles = parsed.profiles;
-      Store.activeProfileId = parsed.activeProfileId || Object.keys(parsed.profiles)[0];
-      saveStore();
-      renderEverything();
-      showToast('All profiles restored');
+      showConfirm('This will replace ALL current profiles with the ones in this backup. Continue?', 'Restore backup?').then(ok => {
+        if(!ok) return;
+        Store.profiles = parsed.profiles;
+        Store.activeProfileId = parsed.activeProfileId || Object.keys(parsed.profiles)[0];
+        saveStore();
+        renderEverything();
+        showToast('All profiles restored');
+      });
     }catch(err){
       showToast('Import failed: invalid backup file', true);
     }
@@ -1300,6 +1533,281 @@ function showToast(msg, isError){
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + name));
+  if(name === 'commands') initCommandsTab();
+}
+
+/* ==================== MUDAE COMMAND DATABASE ==================== */
+const MUDAE_COMMANDS = [
+  // -------- Rolling --------
+  { cat:"Rolling", cmd:"$tuto", desc:"Show the Mudae tutorial." },
+  { cat:"Rolling", cmd:"$waifu", desc:"Roll a random waifu." },
+  { cat:"Rolling", cmd:"$husbando", desc:"Roll a random husbando." },
+  { cat:"Rolling", cmd:"$m", desc:"Roll a random waifu or husbando." },
+  { cat:"Rolling", cmd:"$wg / $wa", desc:"Roll game-only (g) or animanga-only (a) characters." },
+  { cat:"Rolling", cmd:"$search", desc:"Search for a command by name." },
+
+  // -------- Collection --------
+  { cat:"Collection", cmd:"$mm", desc:"View your character collection. Combine with flags (see Flags Reference) to filter/sort." },
+  { cat:"Collection", cmd:"$trade", desc:"Exchange characters with the mentioned player." },
+  { cat:"Collection", cmd:"$give", desc:"Gift the mentioned player a character (limited).", tag:"limited" },
+  { cat:"Collection", cmd:"$fm", desc:"Change your favorite character." },
+  { cat:"Collection", cmd:"$sm", desc:"Sort your characters." },
+  { cat:"Collection", cmd:"$divorce", desc:"Release a character from your collection." },
+  { cat:"Collection", cmd:"$profile", desc:"Display your server profile." },
+
+  // -------- Search --------
+  { cat:"Search", cmd:"$im", desc:"Search for a specific character. Example: $im Rem" },
+  { cat:"Search", cmd:"$ima", desc:"Search for a series." },
+  { cat:"Search", cmd:"$left", desc:"Show number of characters left for your server." },
+  { cat:"Search", cmd:"$fn", desc:"Find notes in your collection from the $note command." },
+  { cat:"Search", cmd:"$fnall", desc:"Find notes in all collections of the server." },
+  { cat:"Search", cmd:"$top", desc:"Top 1,000 characters by claims." },
+  { cat:"Search", cmd:"$topl", desc:"Top 1,000 characters by likes." },
+  { cat:"Search", cmd:"$topml", desc:"Top 1,000 series by likes." },
+  { cat:"Search", cmd:"$topserv", desc:"Server character ranking." },
+  { cat:"Search", cmd:"$tag", desc:"Search characters by tags." },
+  { cat:"Search", cmd:"$pictag", desc:"Search images by pictags." },
+  { cat:"Search", cmd:"$match", desc:"Search for images matching each other." },
+
+  // -------- Customization --------
+  { cat:"Customization", cmd:"$note", desc:"Add a message next to a character in your collection." },
+  { cat:"Customization", cmd:"$changeimg", desc:"Change the main image of a character." },
+  { cat:"Customization", cmd:"$addimg", desc:"Add a custom image for an existing character.", tag:"moderator" },
+  { cat:"Customization", cmd:"$randomimg", desc:"Randomize images during rolls, or disable gifs/custom images." },
+  { cat:"Customization", cmd:"$displayimg", desc:"Prioritize or disable images depending on their pictags." },
+  { cat:"Customization", cmd:"$rollsleft", desc:"Change where the '2 rolls left' message is displayed." },
+  { cat:"Customization", cmd:"$alist", desc:"See available aliases for a character." },
+  { cat:"Customization", cmd:"$alias", desc:"Swap the main name for an available alias." },
+  { cat:"Customization", cmd:"$alias2", desc:"Change the secondary alias to anything you want." },
+  { cat:"Customization", cmd:"$noteimg", desc:"Add a message for an image." },
+  { cat:"Customization", cmd:"$arrangeim", desc:"Change the display layout of $im commands." },
+  { cat:"Customization", cmd:"$addcustom", desc:"Add a custom character for your server.", tag:"moderator" },
+  { cat:"Customization", cmd:"$like", desc:"Add a character to your likelist (or a series with $likem)." },
+  { cat:"Customization", cmd:"$likelist", desc:"Your list of favorite characters (or favorite series with $ml)." },
+  { cat:"Customization", cmd:"$renameclaim", desc:"Change your claim message. See also $renamedivorce." },
+  { cat:"Customization", cmd:"$rh", desc:"Change the title of your collection." },
+  { cat:"Customization", cmd:"$renamelikelist", desc:"Change the title of your likelist." },
+  { cat:"Customization", cmd:"$profilebadge", desc:"Choose the badges displayed on your profile." },
+  { cat:"Customization", cmd:"$profilearrange", desc:"Arrange or hide your profile categories." },
+  { cat:"Customization", cmd:"$badge", desc:"View your list of badges." },
+  { cat:"Customization", cmd:"$toggleletters", desc:"Add a letter next to kakera/spheres buttons to make them more recognizable." },
+  { cat:"Customization", cmd:"$claimreact", desc:"Customize the rolls' claim emojis.", tag:"moderator" },
+  { cat:"Customization", cmd:"$kakerabutton", desc:"Customize the kakera rolls emojis. Or $spherebutton.", tag:"admin" },
+
+  // -------- Utility --------
+  { cat:"Utility", cmd:"$mu", desc:"Time left before your next claim." },
+  { cat:"Utility", cmd:"$rollsup", desc:"Rolls left before the next reset." },
+  { cat:"Utility", cmd:"$timersup", desc:"Merge timers in one message (mu, ru, du, ku, rtu, dku, bku)." },
+  { cat:"Utility", cmd:"$tuarrange", desc:"Customize the info displayed with $timersup." },
+  { cat:"Utility", cmd:"$numberseparator", desc:"Change how big numbers are displayed." },
+  { cat:"Utility", cmd:"$togglemovepage", desc:"Prevent other users from moving the pages of your commands." },
+  { cat:"Utility", cmd:"$wish", desc:"Add a character to your wishlist (mentions you when it's rolled). Spawn rate same as any character, boostable with kakera ($k/$kt). Separate multiple names with $. Not affected by your $disablelist." },
+  { cat:"Utility", cmd:"$wishlist", desc:"Your list of wishes. Or $wlt for details, plus most $mm-style flags." },
+  { cat:"Utility", cmd:"$wishremove", desc:"Remove one or more characters from your wishlist (names separated by $). Alias $wr." },
+  { cat:"Utility", cmd:"$wishremoveall", desc:"Remove your ENTIRE wishlist (asks for 'confirm' after). Alias $wra." },
+  { cat:"Utility", cmd:"$wishi", desc:"Insert/move characters to a specific spot in your wishlist. Syntax: $wishi <position> $ <characters>, or $wishi <reference character> $ <characters to put after>." },
+  { cat:"Utility", cmd:"$wishdm", desc:"Change ping options for when a wished character spawns (DM vs public ping, privacy)." },
+  { cat:"Utility", cmd:"$wishpurge", desc:"Remove doubles and already-claimed characters from your wishlist. Use $wpx to purge while keeping wishes claimed by yourself." },
+  { cat:"Utility", cmd:"$wishd", desc:"Same as $wish, but instantly deletes your message after." },
+  { cat:"Utility", cmd:"$wish=", desc:"Same as $wish, but sorts your whole wishlist alphabetically." },
+  { cat:"Utility", cmd:"$wishl", desc:"Same as $wish, but locks the wish (not affected by $wp / $wpx)." },
+  { cat:"Utility", cmd:"$wishk", desc:"Same as $wish, but wishing for more kakera: +220 kakera instead of +200 with Silver IV bonus; mentions/DM disabled on spawn; doesn't count toward wishprotect. Combinable with other wish options, e.g. $wishidlk." },
+  { cat:"Utility", cmd:"$sw / $starwish", desc:"Star a character on your wishlist — always shows their image on $mm/$pr, and starwish spawns can be boosted with $kt/$tuto. Use $sw none to clear." },
+  { cat:"Utility", cmd:"$swr", desc:"Remove the star from a character (stays in your regular wishlist — use $wishremove to drop it entirely). Alias for removing a starwish." },
+  { cat:"Utility", cmd:"$disable", desc:"Disable series or tags from YOUR rolls." },
+  { cat:"Utility", cmd:"$antidisable", desc:"Prevent deactivation of the series from your rolls." },
+  { cat:"Utility", cmd:"$wishseries", desc:"Get mentioned for each character of a series.", tag:"player premium" },
+  { cat:"Utility", cmd:"$preset", desc:"Backup your lists." },
+  { cat:"Utility", cmd:"$selfreset", desc:"List of personal full-reset commands." },
+  { cat:"Utility", cmd:"$bonus", desc:"Your list of unlocked bonuses." },
+  { cat:"Utility", cmd:"$overview", desc:"Your list of player settings." },
+  { cat:"Utility", cmd:"$togglewestern", desc:"Disable/enable western series from your animanga rolls." },
+  { cat:"Utility", cmd:"$toggleirl", desc:"Disable/enable series with IRL people for your rolls." },
+  { cat:"Utility", cmd:"$setfooter", desc:"Display name/series under the image during your rolls." },
+  { cat:"Utility", cmd:"$imglink", desc:"Display image links during your rolls." },
+  { cat:"Utility", cmd:"$hideinfodisable", desc:"Hide the emoji indicating a character is disabled (for $im / $mmi)." },
+  { cat:"Utility", cmd:"$personalrare", desc:"Change the spawn rarity of owned characters." },
+  { cat:"Utility", cmd:"$tip", desc:"Display a tip." },
+  { cat:"Utility", cmd:"$rolls", desc:"Vote for Mudae and get a rolls reset ($vote to check)." },
+  { cat:"Utility", cmd:"$daily", desc:"Obtain a rolls reset every 20 hours." },
+  { cat:"Utility", cmd:"$haremcopy", desc:"Copy your collection on another server, under conditions.", tag:"player premium 2" },
+  { cat:"Utility", cmd:"$kakeracopy", desc:"Copy your kakera/kakeraloots/badges on another server, under conditions.", tag:"player premium 2" },
+  { cat:"Utility", cmd:"$limroul", desc:"Disable the less popular characters.", tag:"mode 2" },
+
+  // -------- General Utility / Embeds --------
+  { cat:"General", cmd:"$lang", desc:"Change language (en, fr, pt-br or es)." },
+  { cat:"General", cmd:"$channelhelp", desc:"Display the help menu on the channel." },
+  { cat:"General", cmd:"$join", desc:"Link to join Mudae's own server for more info." },
+  { cat:"General", cmd:"$invite", desc:"Link to invite Mudae to another server." },
+  { cat:"General", cmd:"$wiki", desc:"Wikipedia search." },
+  { cat:"General", cmd:"$def <word>", desc:"Definition search." },
+  { cat:"General", cmd:"$prefix", desc:"Change the prefix that invokes Mudae." },
+  { cat:"General", cmd:"$vote", desc:"Help Mudae and get a free rolls reset." },
+  { cat:"General", cmd:"$premium", desc:"Support Mudae and unlock special advantages." },
+  { cat:"General", cmd:"$myid", desc:"Get your user/server full Discord ID." },
+  { cat:"General", cmd:"$date", desc:"My only weakness, time passing." },
+  { cat:"General", cmd:"$star / $lol / $lmfao / $omg / $pervert / $takaché / $takawai / $nanachi / $secret", desc:"Embed reaction commands. $star can target @User." },
+  { cat:"General", cmd:"$avatar <user>", desc:"Show a user's avatar." },
+  { cat:"General", cmd:"$embedtxt <text>", desc:"Embed custom text." },
+
+  // -------- Kakera / Spheres / Keys --------
+  { cat:"Kakera", cmd:"$kakera", desc:"Get kakera badges to unlock bonuses." },
+  { cat:"Kakera", cmd:"$kakerareward", desc:"Kakera badges detailed rewards." },
+  { cat:"Kakera", cmd:"$kakeratower", desc:"Build towers with kakera for more rewards." },
+  { cat:"Kakera", cmd:"$infokl", desc:"Earn even more rewards with kakera lootboxes." },
+  { cat:"Kakera", cmd:"$kakeraup", desc:"Time left before you can react again to a kakera." },
+  { cat:"Kakera", cmd:"$dailykakera", desc:"Earn a daily amount of kakera." },
+  { cat:"Kakera", cmd:"$topservk", desc:"Kakera server ladder." },
+  { cat:"Kakera", cmd:"$givekakera", desc:"Give kakera to someone." },
+  { cat:"Kakera", cmd:"$kakeradm", desc:"Whether you should be notified for Silver IV/Bronze III/Emerald IV bonuses." },
+  { cat:"Kakera", cmd:"$mk", desc:"Force spawn a kakera.", tag:"premium" },
+  { cat:"Kakera", cmd:"$togglekakera", desc:"Enable/disable the different ways of collecting kakera.", tag:"admin" },
+  { cat:"Kakera", cmd:"$togglekakerarolls", desc:"Display or not the kakera value during rolls.", tag:"admin" },
+  { cat:"Kakera", cmd:"$badgevalue", desc:"Change the base value of some kakera badges.", tag:"admin" },
+  { cat:"Kakera", cmd:"$setkakerabonus", desc:"Boost the kakera earned for everyone.", tag:"admin + premium 3" },
+  { cat:"Kakera", cmd:"$cleankakera", desc:"List of kakera reset commands.", tag:"admin" },
+  { cat:"Kakera", cmd:"$givescrap", desc:"Give kakera scraps to any user.", tag:"admin" },
+  { cat:"Kakera", cmd:"$infosphere", desc:"More info about Ourospheres — collect spheres and upgrade your characters." },
+  { cat:"Kakera", cmd:"$infokeys", desc:"More info about Keys — roll owned characters to unlock $embedcolor, extra kakera earnings and soulmate list." },
+
+  // -------- Waifu Arena --------
+  { cat:"Waifu Arena", cmd:"$skills", desc:"Invest skill points in a character you own." },
+  { cat:"Waifu Arena", cmd:"$arena", desc:"Start the game (handled by the bot Mudae GM)." },
+  { cat:"Waifu Arena", cmd:"$mmf", desc:"Your characters ready for the fight (collection option)." },
+  { cat:"Waifu Arena", cmd:"$imf", desc:"See one character ready for the fight." },
+  { cat:"Waifu Arena", cmd:"$ds", desc:"Add a customized sentence when the character is out." },
+  { cat:"Waifu Arena", cmd:"$vs", desc:"Add a customized sentence when the character wins." },
+  { cat:"Waifu Arena", cmd:"$favarena", desc:"Define your favorite choice for the waifu arena." },
+  { cat:"Waifu Arena", cmd:"$skillsgm / $vsgm / $dsgm / $favarenagm", desc:"Equivalent commands usable directly with Mudae GM." },
+
+  // -------- Moderation --------
+  { cat:"Moderation", cmd:"$forcedivorce", desc:"Release a character.", tag:"admin" },
+  { cat:"Moderation", cmd:"$cleanuser", desc:"Reset collection and wishes from a user.", tag:"admin" },
+  { cat:"Moderation", cmd:"$userdivorce", desc:"Reset the collection of the character's owner." },
+  { cat:"Moderation", cmd:"$thanos", desc:"Randomly divorce half of a user's collection.", tag:"admin" },
+  { cat:"Moderation", cmd:"$thanosall", desc:"Divorce half of the collection of each player in the server.", tag:"admin" },
+  { cat:"Moderation", cmd:"$bitesthedust", desc:"Reset all collections of the server.", tag:"server owner" },
+  { cat:"Moderation", cmd:"$clearnotes", desc:"Clear the notes of a user.", tag:"admin" },
+  { cat:"Moderation", cmd:"$clearwishes", desc:"Reset the wishes of a user.", tag:"admin" },
+  { cat:"Moderation", cmd:"$resetalias2", desc:"Reset all $alias2 for a user's characters OR unclaimed characters. Or $resetalias / $resetimg for $alias / $changeimg.", tag:"admin" },
+  { cat:"Moderation", cmd:"$fullreset", desc:"List of full reset commands (aliases, images, wishes, disablelists, embedcolors, keys...).", tag:"admin" },
+  { cat:"Moderation", cmd:"$leftusers", desc:"List of players who left the server with characters/wishes/kakera." },
+  { cat:"Moderation", cmd:"$restorelist", desc:"List of divorced characters by moderation commands." },
+  { cat:"Moderation", cmd:"$restore", desc:"Restore a character from the restorelist.", tag:"admin" },
+  { cat:"Moderation", cmd:"$channeldeny", desc:"Disable some commands in the current channel.", tag:"admin" },
+  { cat:"Moderation", cmd:"$channelrestrict", desc:"Restrict some commands so they can only be used in the current channel.", tag:"admin" },
+  { cat:"Moderation", cmd:"$setchannel", desc:"Archaic version of $channeldeny.", tag:"admin" },
+  { cat:"Moderation", cmd:"$restrict", desc:"Restrict some commands to a Discord role so only that role can use them.", tag:"owner" },
+  { cat:"Moderation", cmd:"$deny", desc:"Deny some commands for a Discord role.", tag:"owner" },
+  { cat:"Moderation", cmd:"$setpermission", desc:"More specific permissions, such as allowing users to use $kakerarefund for themselves only.", tag:"admin" },
+  { cat:"Moderation", cmd:"$togglesilent", desc:"Change how the bot answers to disabled commands.", tag:"owner" },
+  { cat:"Moderation", cmd:"$givecustom", desc:"Give an unclaimed custom character.", tag:"admin" },
+
+  // -------- Server Options --------
+  { cat:"Server Options", cmd:"$settings", desc:"List of the server settings." },
+  { cat:"Server Options", cmd:"$setrare", desc:"Change the spawn rarity of owned characters.", tag:"admin" },
+  { cat:"Server Options", cmd:"$settimer", desc:"Change the number of seconds during which you can claim a character.", tag:"admin" },
+  { cat:"Server Options", cmd:"$setrolls", desc:"Decrease or increase the number of rolls for the whole server.", tag:"admin" },
+  { cat:"Server Options", cmd:"$setclaim", desc:"Change the claim interval (up to one per hour). Non-premium can use it to increase the interval.", tag:"admin + premium 1/2" },
+  { cat:"Server Options", cmd:"$shifthour", desc:"Shift the exact hour of the claim reset.", tag:"admin" },
+  { cat:"Server Options", cmd:"$setinterval", desc:"Change the exact minute of the claim/rolls reset.", tag:"admin + premium 2" },
+  { cat:"Server Options", cmd:"$haremlimit", desc:"Change the maximum number of characters per user.", tag:"admin" },
+  { cat:"Server Options", cmd:"$togglebutton", desc:"Change the automatic addition of buttons under the rolls.", tag:"admin" },
+  { cat:"Server Options", cmd:"$channelinstance", desc:"Create a new instance (server) in the channel.", tag:"admin" },
+  { cat:"Server Options", cmd:"$gamemode", desc:"Change the server game mode.", tag:"admin" },
+  { cat:"Server Options", cmd:"$servlimroul", desc:"Disable the less popular characters server-wide.", tag:"mode 2, admin" },
+  { cat:"Server Options", cmd:"$toggleclaimrolls", desc:"Display or not claim ranks during rolls.", tag:"admin" },
+  { cat:"Server Options", cmd:"$togglelikerolls", desc:"Display or not like ranks during rolls.", tag:"admin" },
+  { cat:"Server Options", cmd:"$togglekakerarolls", desc:"Display or not the kakera value during rolls.", tag:"admin" },
+  { cat:"Server Options", cmd:"$togglensfw", desc:"Toggle NSFW series.", tag:"admin" },
+  { cat:"Server Options", cmd:"$toggledisturbing", desc:"Toggle series containing horror images.", tag:"admin" },
+  { cat:"Server Options", cmd:"$toggleclaimrank", desc:"Toggle character ranking by number of claims.", tag:"admin" },
+  { cat:"Server Options", cmd:"$togglelikerank", desc:"Toggle character ranking by number of likes.", tag:"admin" },
+  { cat:"Server Options", cmd:"$serverdisable", desc:"Rolls-disable up to 1,000 characters for the whole server.", tag:"admin" },
+  { cat:"Server Options", cmd:"$togglesnipe", desc:"Change the possibility to claim on other players' rolls.", tag:"admin" },
+  { cat:"Server Options", cmd:"$togglekakerasnipe", desc:"Same as $togglesnipe, but for kakera.", tag:"admin" },
+];
+
+const MUDAE_FLAGS_REFERENCE = `Add letters to some commands ($mm, $im, etc.) to display different details. Flags are combinable.
+Example: $mmwr only displays your waifus (flag w) and how they are ranked (flag r)
+
+w (waifu), h (husbando), wh (both genders), w= (waifu without both genders), h= (husbando without both genders)
+g (game), g- (animanga), gg- (both), g= (game only), g-= (animanga only)
+a (series list), a+ (series names), b (series bundles), p (character search if you type some text), s (DM)
+r (claim ranks), r- (claim ranks not sorted), l (like ranks), l- (like ranks not sorted)
+k (kakera value), k- (kakera sorted... base value), y (keys only), y= (keys sorted), y+ (with full collection), y- (without keys), y! / y!= / y!+ / y!- (soulkeys variants)
+c (embedcolored), c+ (with full collection), c- (without embedcolor)
+t (type of rolls), m (main names), d (img/alias details), v (hide details such as notes), n- (not noted), n+ (noted only)
+u (unclaimed), o (owner names), o= (owned only), o- (not owned by you), o+ (owned by you)
+x (disabled), x+ (with full collection), x- (not disabled)
+i (images), == (alphabetical sort)
+
+Available arguments (type a space after the command): <series name>, <page>, <user ID or tag/mention>, $mm serv <server ID>
+Example: $mmwr Re:Zero
+Slash commands: /mm /wr`;
+
+function initCommandsTab(){
+  if(window._cmdTabInit) { renderCommandList(); return; }
+  window._cmdTabInit = true;
+  const cats = [...new Set(MUDAE_COMMANDS.map(c => c.cat))];
+  const sel = document.getElementById('cmdCategoryFilter');
+  cats.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+  renderCommandList();
+}
+
+function renderCommandList(){
+  const q = (document.getElementById('cmdSearchInput').value || '').toLowerCase().trim();
+  const catFilter = document.getElementById('cmdCategoryFilter').value;
+  const container = document.getElementById('cmdListContainer');
+
+  let results = MUDAE_COMMANDS.filter(c => {
+    if(catFilter && c.cat !== catFilter) return false;
+    if(!q) return true;
+    return c.cmd.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q) || (c.tag||'').toLowerCase().includes(q);
+  });
+
+  document.getElementById('cmdResultCount').textContent = `${results.length} command${results.length===1?'':'s'} found`;
+
+  if(!q && !catFilter){
+    // show Flags Reference block at top of full listing
+    let html = `<div class="cmd-cat-group"><div class="cmd-cat-title">🚩 Flags Reference (for $mm / $im etc.)</div>
+      <div style="white-space:pre-wrap; font-family:Consolas,monospace; font-size:0.78em; color:var(--text-dim); background:#1c1c26; border:1px solid var(--border2); border-radius:6px; padding:12px;">${MUDAE_FLAGS_REFERENCE}</div></div>`;
+    container.innerHTML = html + buildGroupedCommandsHtml(results);
+  } else {
+    container.innerHTML = buildGroupedCommandsHtml(results);
+  }
+}
+
+function buildGroupedCommandsHtml(list){
+  const byCat = {};
+  list.forEach(c => { (byCat[c.cat] = byCat[c.cat] || []).push(c); });
+  let html = '';
+  Object.keys(byCat).forEach(cat => {
+    html += `<div class="cmd-cat-group"><div class="cmd-cat-title">${cat}</div>`;
+    byCat[cat].forEach(c => {
+      html += `<div class="cmd-row">
+        <span class="cmd-chip" onclick="copyCmdToClipboard('${c.cmd.split(' ')[0].split('/')[0].replace(/'/g, "\\'")}')" title="Click to copy">${escapeHtml(c.cmd)}</span>
+        ${c.tag ? `<span class="cmd-tag">${escapeHtml(c.tag)}</span>` : ''}
+        <span class="cmd-desc">${escapeHtml(c.desc)}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  if(!html) html = `<div style="color:var(--text-faint); font-size:0.9em; padding:20px; text-align:center;">No commands match your search.</div>`;
+  return html;
+}
+
+function copyCmdToClipboard(cmd){
+  navigator.clipboard.writeText(cmd);
+  showToast(`Copied "${cmd}"`);
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
 function toggleCollapsible(header){
@@ -1323,6 +1831,101 @@ function flashButton(btn){
   btn.style.background = '#2ecc71';
   setTimeout(()=>{ btn.style.background = orig; }, 200);
 }
+
+/* =========================================================================
+   GENERIC CONFIRM / PROMPT MODALS
+   Replace native confirm()/prompt() everywhere in this app — the native
+   "this page says" dialogs look messy/inconsistent across browsers and were
+   also observed to interfere with the document keydown listener (Ctrl+Z undo
+   stopped firing right after a native confirm() closed). These promise-based
+   versions avoid both problems. (Per user preference — keep using these for
+   any future dialogs instead of confirm()/prompt().)
+   ========================================================================= */
+let _confirmModalResolve = null;
+function showConfirm(message, title){
+  return new Promise(resolve => {
+    document.getElementById('confirmModalTitle').textContent = title || 'Are you sure?';
+    document.getElementById('confirmModalMessage').textContent = message;
+    document.getElementById('confirmModal').classList.add('show');
+    _confirmModalResolve = (result) => {
+      document.getElementById('confirmModal').classList.remove('show');
+      _confirmModalResolve = null;
+      resolve(result);
+    };
+  });
+}
+
+let _textPromptModalResolve = null;
+function showPrompt(title, defaultValue){
+  return new Promise(resolve => {
+    document.getElementById('textPromptModalTitle').textContent = title || 'Enter a value';
+    const input = document.getElementById('textPromptModalInput');
+    input.value = defaultValue || '';
+    document.getElementById('textPromptModal').classList.add('show');
+    setTimeout(() => { input.focus(); input.select(); }, 0);
+    _textPromptModalResolve = (result) => {
+      document.getElementById('textPromptModal').classList.remove('show');
+      _textPromptModalResolve = null;
+      resolve(result);
+    };
+  });
+}
+// allow Enter key to submit the text prompt modal
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter' && document.getElementById('textPromptModal').classList.contains('show')){
+    if(document.activeElement && document.activeElement.id === 'textPromptModalInput'){
+      _textPromptModalResolve(document.getElementById('textPromptModalInput').value);
+    }
+  }
+  if(e.key === 'Escape'){
+    if(document.getElementById('confirmModal').classList.contains('show') && _confirmModalResolve) _confirmModalResolve(false);
+    if(document.getElementById('textPromptModal').classList.contains('show') && _textPromptModalResolve) _textPromptModalResolve(null);
+    hideTileActionMenu();
+  }
+});
+
+/* ---- Tile right-click action menu (replaces prompt()-based group menu) ---- */
+function hideTileActionMenu(){
+  document.getElementById('tileActionMenu').classList.remove('show');
+}
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('tileActionMenu');
+  if(menu.classList.contains('show') && !menu.contains(e.target)) hideTileActionMenu();
+});
+function showTileActionMenu(ch, x, y){
+  const data = getData();
+  const menu = document.getElementById('tileActionMenu');
+  menu.innerHTML = '';
+
+  if(data.groups.length > 0){
+    const label = document.createElement('div');
+    label.className = 'menu-label';
+    label.textContent = 'Add to group';
+    menu.appendChild(label);
+    data.groups.forEach(g => {
+      const b = document.createElement('button');
+      b.textContent = g.name;
+      b.onclick = () => { hideTileActionMenu(); addToGroup(ch.id, g.id); };
+      menu.appendChild(b);
+    });
+    const removeFromGroupBtn = document.createElement('button');
+    removeFromGroupBtn.textContent = 'Remove from group';
+    removeFromGroupBtn.onclick = () => { hideTileActionMenu(); removeFromGroup(ch.id); };
+    menu.appendChild(removeFromGroupBtn);
+    menu.appendChild(document.createElement('hr'));
+  }
+
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'danger-item';
+  removeBtn.textContent = '✕ Remove character (divorced/traded)';
+  removeBtn.onclick = () => { hideTileActionMenu(); removeCharacter(ch.id); };
+  menu.appendChild(removeBtn);
+
+  menu.style.left = Math.min(x, window.innerWidth - 200) + 'px';
+  menu.style.top = Math.min(y, window.innerHeight - 150) + 'px';
+  menu.classList.add('show');
+}
+
 
 /* =========================================================================
    SHARED PARSER  ($mmasi- / $mmsaty+ri-c+x+ko output)
@@ -1513,8 +2116,8 @@ function applyGridSnapshot(snapshot){
   data.characters = JSON.parse(JSON.stringify(snapshot.characters));
   data.groups = JSON.parse(JSON.stringify(snapshot.groups));
   data.selectedImages = JSON.parse(JSON.stringify(snapshot.selectedImages));
-  renderSorterGrid();
   saveStore();
+  refreshDataViews();
 }
 function undoGrid(){
   if(undoStack.length === 0) return;
@@ -1665,21 +2268,49 @@ function createTile(ch){
   btn.onclick = (e) => { e.stopPropagation(); openGallery(ch.id); };
   tile.appendChild(btn);
 
+  const delBtn = document.createElement('div');
+  delBtn.className = 'delete-btn';
+  delBtn.textContent = '✕';
+  delBtn.title = 'Remove this character (divorced/traded away)';
+  delBtn.onclick = (e) => { e.stopPropagation(); removeCharacter(ch.id); };
+  tile.appendChild(delBtn);
+
   tile.oncontextmenu = (e) => {
     e.preventDefault();
-    const data = getData();
-    if(data.groups.length === 0){ showToast('Create a group first'); return; }
-    let menu = 'Select a group:\n';
-    data.groups.forEach((g,i) => { menu += `${i+1}. ${g.name}\n`; });
-    menu += '0. Remove from group';
-    const choice = prompt(menu);
-    if(choice === null) return;
-    const num = parseInt(choice);
-    if(num === 0) removeFromGroup(ch.id);
-    else if(num > 0 && num <= data.groups.length) addToGroup(ch.id, data.groups[num-1].id);
+    showTileActionMenu(ch, e.clientX, e.clientY);
   };
 
   return tile;
+}
+
+function removeCharacter(charId){
+  const data = getData();
+  const ch = data.characters.find(c => c.id === charId);
+  if(!ch) return;
+  showConfirm(`Remove "${ch.name}" from your list? (You can undo with Ctrl+Z)`, 'Remove character?').then(ok => {
+    if(!ok) return;
+    pushGridState();
+    data.characters = data.characters.filter(c => c.id !== charId);
+    data.groups.forEach(g => { g.memberIds = g.memberIds.filter(id => id !== charId); });
+    saveStore();
+    refreshDataViews();
+    showToast(`Removed "${ch.name}"`);
+  });
+}
+
+function removeCharactersBulk(charIds){
+  if(!charIds || charIds.length === 0) return;
+  const data = getData();
+  showConfirm(`Remove ${charIds.length} character${charIds.length!==1?'s':''} from your list? (You can undo with Ctrl+Z)`, 'Remove characters?').then(ok => {
+    if(!ok) return;
+    pushGridState();
+    const idSet = new Set(charIds);
+    data.characters = data.characters.filter(c => !idSet.has(c.id));
+    data.groups.forEach(g => { g.memberIds = g.memberIds.filter(id => !idSet.has(id)); });
+    saveStore();
+    refreshDataViews();
+    showToast(`Removed ${charIds.length} character${charIds.length!==1?'s':''}`);
+  });
 }
 
 function getGroupForChar(charId){
@@ -1734,14 +2365,15 @@ function renderGroups(){
     colorBtn.textContent = '🎨';
     colorBtn.className = 'btn-sm';
     colorBtn.onclick = () => {
-      const newColor = prompt('Enter color (hex):', group.color);
-      if(newColor){
-        pushGridState();
-        group.color = newColor;
-        saveStore();
-        renderGroups();
-        renderSorterGrid();
-      }
+      showPrompt('Enter color (hex):', group.color).then(newColor => {
+        if(newColor){
+          pushGridState();
+          group.color = newColor;
+          saveStore();
+          renderGroups();
+          renderSorterGrid();
+        }
+      });
     };
 
     const deleteBtn = document.createElement('button');
@@ -2843,11 +3475,35 @@ function parseWishlist(){
   raw.forEach(line => {
     if(!line.trim()) return;
     let name = line.replace(/⭐|✅|❌|\+\d+%/g, '').trim();
+    if(!name) return;
     data.wishlist.push({ name, star: line.includes('⭐'), owned: line.includes('✅'), sphereLevel: 0, image: null });
   });
+  // This parse represents what's ACTUALLY on Mudae right now, so the baseline
+  // snapshot is reset to match it exactly. Any edits made on the site from
+  // this point on (add/remove/star/move) are diffed against this baseline
+  // to figure out which commands still need to be run.
+  data.wishlistBaseline = data.wishlist.map(c => ({ name: c.name, star: c.star }));
   saveStore();
   renderWishlist();
   showToast(`Parsed ${data.wishlist.length} wishlist entries`);
+}
+
+// Older saved profiles (from before the baseline-diff system existed) won't
+// have a wishlistBaseline. Treat first load as "already synced" so it
+// doesn't suddenly think the whole wishlist needs to be re-sent.
+function ensureWishlistBaseline(){
+  const data = getData();
+  if(!data.wishlistBaseline){
+    data.wishlistBaseline = data.wishlist.map(c => ({ name: c.name, star: !!c.star }));
+  }
+}
+
+function resyncWishlistBaseline(){
+  const data = getData();
+  data.wishlistBaseline = data.wishlist.map(c => ({ name: c.name, star: !!c.star }));
+  saveStore();
+  renderPendingWishlistChanges();
+  showToast('Baseline synced — current list now treated as what\'s on Mudae');
 }
 
 function calculateWishlistSummary(){
@@ -2865,6 +3521,7 @@ function calculateWishlistSummary(){
 }
 
 function renderWishlist(){
+  ensureWishlistBaseline();
   const wishlist = getData().wishlist;
   const container = document.getElementById('wishlistContainer');
   container.innerHTML = '';
@@ -2889,8 +3546,10 @@ function renderWishlist(){
     const given = char.sphereLevel * 15;
 
     const left = document.createElement('div');
-    left.innerHTML = `<strong>${escapeHTML(char.name)}</strong>
-      <div class="boost-info">${char.owned ? 'Owned ✅ | ' : ''}Receives: +${received}% | Gives: +${given}% | Sphere: ${char.sphereLevel}/5</div>`;
+    left.style.cssText = 'display:flex; align-items:flex-start; gap:8px;';
+    left.innerHTML = `<span title="Drag to reorder" style="cursor:grab; color:var(--text-faint); user-select:none; padding-top:2px;">⠿</span>
+      <div><strong>${escapeHTML(char.name)}</strong>
+      <div class="boost-info">${char.owned ? 'Owned ✅ | ' : ''}Receives: +${received}% | Gives: +${given}% | Sphere: ${char.sphereLevel}/5</div></div>`;
 
     const controls = document.createElement('div');
     controls.className = 'wishlist-controls';
@@ -2911,43 +3570,265 @@ function renderWishlist(){
     plus.textContent = '+';
     plus.onclick = () => { if(char.sphereLevel<5) char.sphereLevel++; saveStore(); renderWishlist(); };
 
+    const moveBtn = document.createElement('button');
+    moveBtn.textContent = '🔀';
+    moveBtn.title = 'Manually force a $wishi command to move this character to a specific position in Mudae';
+    moveBtn.onclick = () => openWishiModal(char.name);
+
     const removeBtn = document.createElement('button');
     removeBtn.textContent = '🗑';
     removeBtn.title = 'Remove from wishlist';
     removeBtn.className = 'btn-danger';
     removeBtn.onclick = () => { wishlist.splice(index,1); saveStore(); renderWishlist(); };
 
-    controls.append(starBtn, ownedBtn, minus, plus, removeBtn);
+    controls.append(starBtn, ownedBtn, minus, plus, moveBtn, removeBtn);
     div.append(left, controls);
     container.appendChild(div);
   });
 
   calculateWishlistSummary();
+  renderPendingWishlistChanges();
 }
 
 let wishlistCommandList = [];
 let wishlistCommandIndex = 0;
 
+// Discord hard-caps messages at 2000 chars. Stay well under that so long
+// wishlists don't get silently truncated/rejected by Discord.
+const WISHLIST_CMD_CHAR_LIMIT = 1900;
+
+// Splits a list of names into as few "$prefix name1$name2$..." commands as
+// possible while staying under WISHLIST_CMD_CHAR_LIMIT per command.
+function buildChunkedWishCommands(prefix, names){
+  const commands = [];
+  let currentNames = [];
+  names.forEach(name => {
+    const testCmd = prefix + [...currentNames, name].join('$');
+    if(testCmd.length > WISHLIST_CMD_CHAR_LIMIT && currentNames.length > 0){
+      commands.push(prefix + currentNames.join('$'));
+      currentNames = [name];
+    } else {
+      currentNames.push(name);
+    }
+  });
+  if(currentNames.length > 0) commands.push(prefix + currentNames.join('$'));
+  return commands;
+}
+
+/* =========================================================================
+   BASELINE DIFF SYSTEM
+   data.wishlistBaseline = what's actually on Mudae right now (snapshot,
+   {name, star} only). data.wishlist = the list as edited on this site
+   (additions, removals, star toggles). computeWishlistDiff() compares the
+   two and returns exactly what changed, which is what actually needs to be
+   sent to Discord -- nothing more, nothing forgotten. ========================================================================= */
+function computeWishlistDiff(){
+  const data = getData();
+  ensureWishlistBaseline();
+  const baseline = data.wishlistBaseline;
+  const current = data.wishlist;
+
+  const baselineByName = new Map(baseline.map(c => [c.name, c]));
+  const currentByName = new Map(current.map(c => [c.name, c]));
+
+  const removed = [];          // in baseline, not in current -> $wishremove
+  const added = [];            // in current, not in baseline -> $wish (preserves current's order)
+  const addedStarred = [];     // newly added AND starred -> also $sw
+  const newlyStarred = [];     // present in both, star false->true -> $sw
+  const newlyUnstarred = [];   // present in both, star true->false -> $swr
+
+  baseline.forEach(b => {
+    if(!currentByName.has(b.name)) removed.push(b.name);
+  });
+
+  current.forEach(c => {
+    const prev = baselineByName.get(c.name);
+    if(!prev){
+      added.push(c.name);
+      if(c.star) addedStarred.push(c.name);
+    } else {
+      if(c.star && !prev.star) newlyStarred.push(c.name);
+      if(!c.star && prev.star) newlyUnstarred.push(c.name);
+    }
+  });
+
+  // ---- Reorder detection ----
+  // Simulate what Mudae's wishlist looks like right after the remove/add
+  // commands above run: surviving baseline names (in their original order)
+  // with the newly-added names appended at the end (that's where $wish puts
+  // them -- it doesn't accept a position).
+  const simulated = baseline.map(b => b.name).filter(n => currentByName.has(n)).concat(added);
+  // The order the user actually wants, full list, exactly as shown on site.
+  const target = current.map(c => c.name);
+  const moves = computeWishiMoves(simulated, target);
+
+  return { removed, added, addedStarred, newlyStarred, newlyUnstarred, moves };
+}
+
+// Turns `arr` into `target` (same elements, different order) using the
+// minimum-ish number of $wishi <position> <name> moves -- walks target
+// left-to-right, and whenever the next slot doesn't already hold the right
+// character, pulls that character from later in the array and drops it in
+// place. Mirrors exactly what running the resulting $wishi commands in
+// order against the real Mudae wishlist would do, so positions stay valid
+// even though earlier moves shift everything after them.
+function computeWishiMoves(arr, target){
+  const working = arr.slice();
+  const moves = [];
+  for(let i = 0; i < target.length; i++){
+    if(working[i] === target[i]) continue;
+    const name = target[i];
+    const curIdx = working.indexOf(name, i);
+    if(curIdx === -1) continue; // shouldn't happen -- same elements both arrays
+    working.splice(curIdx, 1);
+    working.splice(i, 0, name);
+    moves.push({ name, position: i + 1 });
+  }
+  return moves;
+}
+
+function hasPendingWishlistChanges(diff){
+  return diff.removed.length || diff.added.length || diff.newlyStarred.length || diff.newlyUnstarred.length || diff.moves.length;
+}
+
+function renderPendingWishlistChanges(){
+  const el = document.getElementById('wishlistPendingChanges');
+  if(!el) return;
+  const diff = computeWishlistDiff();
+  if(!hasPendingWishlistChanges(diff)){
+    el.innerHTML = `<span style="color:var(--text-faint);">No pending changes — site list matches the last sync.</span>`;
+    return;
+  }
+  const parts = [];
+  if(diff.added.length) parts.push(`<span style="color:var(--green);">+${diff.added.length} to add</span>`);
+  if(diff.removed.length) parts.push(`<span style="color:#ff6b6b;">-${diff.removed.length} to remove</span>`);
+  if(diff.newlyStarred.length) parts.push(`<span style="color:#facc15;">⭐ +${diff.newlyStarred.length} star</span>`);
+  if(diff.newlyUnstarred.length) parts.push(`<span style="color:#facc15;">☆ -${diff.newlyUnstarred.length} unstar</span>`);
+  if(diff.moves.length) parts.push(`<span style="color:#00bfff;">🔀 ${diff.moves.length} repositioned</span>`);
+  el.innerHTML = `Pending changes (not yet sent to Mudae): ${parts.join(' &nbsp;|&nbsp; ')}`;
+}
+
+/* Generates ONLY the commands needed to turn your ACTUAL Mudae wishlist
+   (wishlistBaseline) into an exact match of what's currently shown on this
+   site (wishlist) -- removals, additions, star changes, AND reordering, in
+   the correct order:
+     1. $wishremove  -- drop anything taken off the list
+     2. $swr         -- unstar anything un-starred (stays in the wishlist)
+     3. $wish        -- add anything new (lands at the end of the list)
+     4/5. $sw        -- star anything starred (new or newly-starred)
+     6. $wishi       -- reposition characters so the final order matches
+                         the site exactly (real Mudae subcommand, confirmed
+                         via $wish's own help text: "$wishi <position> $
+                         <characters>" or "$wishi <reference char> $
+                         <characters>")
+   Once generated, the baseline is updated to match the current list, since
+   running these commands is what makes that true on Mudae's end too. */
 function generateWishlistCommands(){
-  const wishlist = getData().wishlist;
-  if(wishlist.length === 0) return;
+  const diff = computeWishlistDiff();
 
-  const starwished = wishlist.filter(c => c.star).map(c => c.name);
-  const allNames = wishlist.map(c => c.name);
+  if(!hasPendingWishlistChanges(diff)){
+    showToast('Nothing has changed since the last sync — no commands needed', true);
+    wishlistCommandList = [];
+    wishlistCommandIndex = 0;
+    renderWishlistCommands();
+    return;
+  }
 
-  wishlistCommandList = [];
-  if(starwished.length > 0) wishlistCommandList.push('$swr ' + starwished.join('$'));
-  wishlistCommandList.push('$wr ' + allNames.join('$'));
-  wishlistCommandList.push('$wish ' + allNames.join('$'));
-  if(starwished.length > 0) wishlistCommandList.push('$sw ' + starwished.join('$'));
-  wishlistCommandList.push('$wishi ' + allNames.join('$'));
+  wishlistCommandList = [
+    // 1. Remove characters dropped from the list entirely
+    ...buildChunkedWishCommands('$wishremove ', diff.removed),
+    // 2. Remove star from characters that got un-starred (still in wishlist)
+    ...buildChunkedWishCommands('$swr ', diff.newlyUnstarred),
+    // 3. Add brand-new characters
+    ...buildChunkedWishCommands('$wish ', diff.added),
+    // 4. Star newly-added characters that were added already starred
+    ...buildChunkedWishCommands('$sw ', diff.addedStarred),
+    // 5. Star existing characters that got newly starred
+    ...buildChunkedWishCommands('$sw ', diff.newlyStarred),
+    // 6. Reposition anything that moved (drag-and-drop), one $wishi per move
+    ...diff.moves.map(m => `$wishi ${m.position} $ ${m.name}`),
+  ];
 
   wishlistCommandIndex = 0;
   renderWishlistCommands();
   calculateWishlistSummary();
+
+  // Running these commands (in order) brings Mudae's actual wishlist in
+  // line with the site, so the baseline now matches the current list.
+  const data = getData();
+  data.wishlistBaseline = data.wishlist.map(c => ({ name: c.name, star: c.star }));
+  saveStore();
+  renderPendingWishlistChanges();
+
+  showToast(`Generated ${wishlistCommandList.length} command(s) — run them in order to sync Mudae`);
+}
+
+/* Builds a $wishi command to move/insert one character to sit next to a
+   specific neighbor in the Mudae wishlist (by numeric position or by a
+   reference character's name), and adds it to the command list so it can be
+   copied like any other generated command. Manual override for when you
+   want to force one specific move outside of the automatic drag-and-drop
+   diff above. */
+let _wishiTargetChar = null;
+function openWishiModal(charName){
+  _wishiTargetChar = charName;
+  document.getElementById('wishiModalTitle').textContent = `Move "${charName}" in Mudae`;
+  document.getElementById('wishiPositionInput').value = '';
+  document.getElementById('wishiReferenceInput').value = '';
+  setWishiMode('position');
+  document.getElementById('wishiModal').classList.add('show');
+}
+function closeWishiModal(){
+  document.getElementById('wishiModal').classList.remove('show');
+}
+function setWishiMode(mode){
+  document.getElementById('wishiPositionRow').style.display = (mode === 'position') ? 'block' : 'none';
+  document.getElementById('wishiReferenceRow').style.display = (mode === 'reference') ? 'block' : 'none';
+  document.getElementById('wishiModeByPosition').classList.toggle('active', mode === 'position');
+  document.getElementById('wishiModeByReference').classList.toggle('active', mode === 'reference');
+  document.getElementById('wishiModal').dataset.mode = mode;
+}
+function submitWishiModal(){
+  const mode = document.getElementById('wishiModal').dataset.mode;
+  let cmd;
+  if(mode === 'position'){
+    const pos = document.getElementById('wishiPositionInput').value.trim();
+    if(!pos || isNaN(parseInt(pos))){ showToast('Enter a valid position number', true); return; }
+    cmd = `$wishi ${pos} $ ${_wishiTargetChar}`;
+  } else {
+    const ref = document.getElementById('wishiReferenceInput').value.trim();
+    if(!ref){ showToast('Enter a reference character name', true); return; }
+    cmd = `$wishi ${ref} $ ${_wishiTargetChar}`;
+  }
+  wishlistCommandList.push(cmd);
+  wishlistCommandIndex = wishlistCommandList.length - 1;
+  renderWishlistCommands();
+  closeWishiModal();
+  showToast('Added $wishi command to the list below');
+  const box = document.getElementById('wishlistCommandsBox');
+  if(box.scrollIntoView) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* Mirrors the real in-Mudae workflow: $wishremoveall (alias $wra) wipes
+   your ENTIRE wishlist in one shot, then Mudae asks you to type "confirm".
+   Far faster than removing characters one by one. Since this wipes Mudae's
+   actual wishlist, the baseline is reset to empty too -- so if you then hit
+   "Generate Wishlist Commands" again, it'll correctly emit $wish/$sw for
+   everything currently shown on the site (since baseline now says Mudae has
+   nothing). */
+function generateWishlistClearCommands(){
+  wishlistCommandList = ['$wishremoveall', 'confirm'];
+  wishlistCommandIndex = 0;
+  renderWishlistCommands();
+  const data = getData();
+  data.wishlistBaseline = [];
+  saveStore();
+  renderPendingWishlistChanges();
+  showToast('Clear-wishlist commands ready — this wipes your ENTIRE in-game wishlist', true);
 }
 
 function renderWishlistCommands(){
+
   const container = document.getElementById('wishlistCommandContainer');
   const stepsEl = document.getElementById('wishlistSteps');
   container.innerHTML = '';
@@ -3195,12 +4076,7 @@ function applyUiStateToControls(){
   document.body.classList.toggle('fit-width', ui.fitToScreen);
 }
 
-function renderEverything(){
-  renderProfileSelect();
-  applyUiStateToControls();
-  populateOwnerFilter();
-  displayQuickNotes();
-
+function refreshDataViews(){
   renderSorterGrid();
   renderGroups();
 
@@ -3217,7 +4093,22 @@ function renderEverything(){
   updateNoterStats();
 
   renderWishlist();
+  populateOwnerFilter();
+}
 
+function renderEverything(){
+  renderProfileSelect();
+  applyUiStateToControls();
+  populateOwnerFilter();
+  displayQuickNotes();
+
+  refreshDataViews();
+
+  // NOTE: this resets undo/redo history — only call renderEverything() on a
+  // "fresh load" type action (profile switch, full parse/replace, import).
+  // For small edits (single character delete, group tweak, etc.) call
+  // refreshDataViews() instead so pushGridState()'s snapshot survives and
+  // Ctrl+Z actually has something to undo to.
   undoStack = [];
   redoStack = [];
   pushGridState();
@@ -3903,6 +4794,265 @@ function kdSearch(node, r, g, b, best){
   const far  = diff < 0 ? node.right : node.left;
   kdSearch(near, r, g, b, best);
   if(diff*diff < best.dist) kdSearch(far, r, g, b, best);
+}
+
+/* =========================================================================
+   ANIMATED BANNER ENGINE
+   Scrolling strip GIF — all characters play their GIF animations while
+   the strip pans left, looping seamlessly.
+   ========================================================================= */
+
+let bannerCancelled = false;
+
+function openBannerModal(){
+  const chars = getData().characters.filter(c => !c.excluded && c.image);
+  if(!chars.length){ showToast('No characters with images loaded', true); return; }
+  document.getElementById('bannerModal').classList.add('show');
+  document.getElementById('bannerStatus').textContent = `${chars.length} characters will be included.`;
+  document.getElementById('bannerPreviewWrap').style.display = 'none';
+}
+
+function cancelBanner(){
+  bannerCancelled = true;
+  document.getElementById('bannerCancelBtn').style.display = 'none';
+  document.getElementById('bannerStatus').textContent = 'Cancelled.';
+}
+
+function setBannerStatus(msg){ document.getElementById('bannerStatus').textContent = msg; }
+
+async function generateBanner(){
+  bannerCancelled = false;
+  const chars = getData().characters.filter(c => !c.excluded && c.image);
+  if(!chars.length){ showToast('No characters with images', true); return; }
+
+  const STRIP_H   = parseInt(document.getElementById('bannerHeight').value)  || 350;
+  const CARD_W    = parseInt(document.getElementById('bannerCardW').value)    || 225;
+  const SPEED     = parseInt(document.getElementById('bannerSpeed').value)    || 3;
+  const FRAME_MS  = parseInt(document.getElementById('bannerFrameMs').value)  || 50;
+  const GAP       = parseInt(document.getElementById('bannerGap').value)      || 8;
+  const BG_HEX    = document.getElementById('bannerBg').value || '#0a0a0f';
+  const STRIP_W   = 900; // output width — wide enough to see ~4 chars
+
+  const bgR = parseInt(BG_HEX.slice(1,3),16);
+  const bgG = parseInt(BG_HEX.slice(3,5),16);
+  const bgB = parseInt(BG_HEX.slice(5,7),16);
+
+  const genBtn = document.getElementById('bannerGenBtn');
+  const cancelBtn = document.getElementById('bannerCancelBtn');
+  genBtn.disabled = true;
+  cancelBtn.style.display = '';
+
+  // --- 1. Load & decode every character image ---
+  setBannerStatus(`Loading images… 0 / ${chars.length}`);
+  await new Promise(r => setTimeout(r, 0));
+
+  const slots = []; // { frames:[{canvas,delay}], totalDuration, w, h }
+
+  for(let ci = 0; ci < chars.length; ci++){
+    if(bannerCancelled) break;
+    setBannerStatus(`Loading images… ${ci+1} / ${chars.length}`);
+    if(ci % 5 === 0) await new Promise(r => setTimeout(r, 0));
+
+    const ch = chars[ci];
+    const url = ch.image;
+    const isGif = url.toLowerCase().includes('.gif');
+
+    try {
+      if(isGif){
+        const blobUrl = await fetchImageAsBlob(url);
+        if(!blobUrl){ slots.push(await staticSlot(url, STRIP_H, CARD_W)); continue; }
+        const buf = await (await fetch(blobUrl)).arrayBuffer();
+        URL.revokeObjectURL(blobUrl);
+        const parseGIF = window.parseGIF;
+        const decompressFrames = window.decompressFrames;
+        if(!parseGIF){ slots.push(await staticSlot(url, STRIP_H, CARD_W)); continue; }
+        const gifData = parseGIF(buf);
+        const rawFrames = decompressFrames(gifData, true);
+        if(!rawFrames.length){ slots.push(await staticSlot(url, STRIP_H, CARD_W)); continue; }
+
+        // Decode frames into canvases
+        const srcW = gifData.lsd.width, srcH = gifData.lsd.height;
+        const compCanvas = document.createElement('canvas');
+        compCanvas.width = srcW; compCanvas.height = srcH;
+        const compCtx = compCanvas.getContext('2d');
+        const frames = [];
+        let totalDuration = 0;
+
+        for(const rf of rawFrames){
+          const fc = document.createElement('canvas');
+          fc.width = rf.dims.width; fc.height = rf.dims.height;
+          fc.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(rf.patch), rf.dims.width, rf.dims.height), 0, 0);
+          if(rf.disposalType === 2) compCtx.clearRect(rf.dims.left, rf.dims.top, rf.dims.width, rf.dims.height);
+          compCtx.drawImage(fc, rf.dims.left, rf.dims.top);
+
+          // Scale to strip height
+          const scale = STRIP_H / srcH;
+          const dw = Math.round(srcW * scale);
+          const out = document.createElement('canvas');
+          out.width = dw; out.height = STRIP_H;
+          out.getContext('2d').drawImage(compCanvas, 0, 0, dw, STRIP_H);
+
+          const delay = rf.delay || 10; // centiseconds
+          frames.push({ canvas: out, delay: delay * 10 }); // to ms
+          totalDuration += delay * 10;
+        }
+        slots.push({ frames, totalDuration, w: frames[0].canvas.width, h: STRIP_H });
+      } else {
+        slots.push(await staticSlot(url, STRIP_H, CARD_W));
+      }
+    } catch(e){
+      // Skip broken images
+      console.warn('Banner: skipped', url, e);
+    }
+  }
+
+  if(bannerCancelled || !slots.length){
+    setBannerStatus(bannerCancelled ? 'Cancelled.' : 'No images could be loaded.');
+    genBtn.disabled = false; cancelBtn.style.display = 'none';
+    return;
+  }
+
+  setBannerStatus(`Loaded ${slots.length} characters. Compositing banner…`);
+  await new Promise(r => setTimeout(r, 0));
+
+  // --- 2. Calculate total scroll distance ---
+  // All slots laid out left to right with GAP between them
+  const slotWidths = slots.map(s => Math.min(s.w, CARD_W)); // cap at card width
+  const totalContentW = slotWidths.reduce((a,b) => a+b, 0) + GAP * (slots.length - 1);
+  // Banner scrolls the full content then loops
+  const totalScrollPx = totalContentW + STRIP_W; // scroll until last card exits left
+
+  const totalBannerFrames = Math.ceil(totalScrollPx / SPEED);
+
+  // --- 3. Show static preview frame ---
+  const prevCanvas = document.getElementById('bannerPreviewCanvas');
+  prevCanvas.width = STRIP_W; prevCanvas.height = STRIP_H;
+  drawBannerFrame(prevCanvas.getContext('2d'), slots, slotWidths, GAP, 0, STRIP_W, STRIP_H, bgR, bgG, bgB);
+  document.getElementById('bannerPreviewWrap').style.display = 'block';
+
+  // --- 4. Encode all banner frames ---
+  setBannerStatus(`Encoding… 0 / ${totalBannerFrames} frames`);
+  await new Promise(r => setTimeout(r, 0));
+
+  const bufSize = STRIP_W * STRIP_H * totalBannerFrames * 4 + 65536;
+  const buf = new Uint8Array(Math.min(bufSize, 256 * 1024 * 1024));
+  const encoder = new GifWriter(buf, STRIP_W, STRIP_H, { loop: 0 });
+
+  const workCanvas = document.createElement('canvas');
+  workCanvas.width = STRIP_W; workCanvas.height = STRIP_H;
+  const workCtx = workCanvas.getContext('2d');
+
+  for(let f = 0; f < totalBannerFrames; f++){
+    if(bannerCancelled) break;
+    if(f % 20 === 0){
+      setBannerStatus(`Encoding… ${f} / ${totalBannerFrames} frames`);
+      await new Promise(r => setTimeout(r, 0));
+    }
+
+    const scrollX = f * SPEED;
+    drawBannerFrame(workCtx, slots, slotWidths, GAP, scrollX, STRIP_W, STRIP_H, bgR, bgG, bgB);
+    const rgba = workCtx.getImageData(0, 0, STRIP_W, STRIP_H).data;
+    const { indexed, palette } = quantiseFrame(rgba, STRIP_W * STRIP_H);
+    encoder.addFrame(0, 0, STRIP_W, STRIP_H, indexed, {
+      palette,
+      delay: Math.round(FRAME_MS / 10),
+      disposal: 1,
+    });
+  }
+
+  if(bannerCancelled){
+    setBannerStatus('Cancelled.');
+    genBtn.disabled = false; cancelBtn.style.display = 'none';
+    return;
+  }
+
+  const bytes = buf.slice(0, encoder.end());
+  const blob = new Blob([bytes], { type: 'image/gif' });
+  const profileName = getData().name || 'collection';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${profileName}_banner.gif`;
+  a.click();
+
+  setBannerStatus(`✅ Done — ${totalBannerFrames} frames, ${(bytes.length/1024/1024).toFixed(1)} MB`);
+  showToast('Downloaded banner GIF!');
+  genBtn.disabled = false;
+  cancelBtn.style.display = 'none';
+}
+
+// Draw one banner frame at a given scroll offset
+function drawBannerFrame(ctx, slots, slotWidths, gap, scrollX, stripW, stripH, bgR, bgG, bgB){
+  // Fill background
+  ctx.fillStyle = `rgb(${bgR},${bgG},${bgB})`;
+  ctx.fillRect(0, 0, stripW, stripH);
+
+  // Find which time each slot's GIF animation is at based on scroll position
+  // Use scrollX as a proxy for time: scrollX ms ≈ time elapsed
+  let x = -scrollX;
+  for(let si = 0; si < slots.length; si++){
+    const slot = slots[si];
+    const sw = slotWidths[si];
+    // Only draw if visible
+    if(x + sw > 0 && x < stripW){
+      // Pick frame based on scroll position as clock
+      const timeMs = scrollX * 16; // ~60fps feel
+      let frame;
+      if(slot.frames.length === 1){
+        frame = slot.frames[0];
+      } else {
+        const t = timeMs % slot.totalDuration;
+        let acc = 0;
+        frame = slot.frames[slot.frames.length - 1];
+        for(const fr of slot.frames){
+          acc += fr.delay;
+          if(t < acc){ frame = fr; break; }
+        }
+      }
+      // Draw the frame canvas cropped/centred to card width
+      const src = frame.canvas;
+      const srcW = src.width;
+      // Centre-crop if source is wider than card width
+      const drawW = Math.min(srcW, sw);
+      const srcX = Math.max(0, (srcW - sw) / 2);
+      ctx.drawImage(src, srcX, 0, drawW, stripH, x, 0, drawW, stripH);
+    }
+    x += sw + gap;
+    if(x > stripW) break;
+  }
+}
+
+// Load a static image as a single-frame slot
+async function staticSlot(url, stripH, cardW){
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const finish = () => {
+      const scale = stripH / (img.naturalHeight || stripH);
+      const dw = Math.round((img.naturalWidth || cardW) * scale);
+      const c = document.createElement('canvas');
+      c.width = dw; c.height = stripH;
+      c.getContext('2d').drawImage(img, 0, 0, dw, stripH);
+      resolve({ frames:[{ canvas:c, delay:100 }], totalDuration:100, w:dw, h:stripH });
+    };
+    img.onload = finish;
+    img.onerror = () => {
+      // Try proxy
+      const img2 = new Image();
+      img2.crossOrigin = 'anonymous';
+      img2.onload = () => { img.src = img2.src; };
+      img2.onerror = () => {
+        // Blank placeholder
+        const c = document.createElement('canvas');
+        c.width = cardW; c.height = stripH;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#1a1a24';
+        ctx.fillRect(0,0,cardW,stripH);
+        resolve({ frames:[{ canvas:c, delay:100 }], totalDuration:100, w:cardW, h:stripH });
+      };
+      img2.src = `http://localhost:8000/${url}`;
+    };
+    img.src = url;
+  });
 }
 
 async function snapshotGrid(which){

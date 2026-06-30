@@ -188,6 +188,54 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   margin-bottom:16px;
 }
 
+/* OC Solver */
+.oc-grid{
+  display:grid;
+  grid-template-columns:repeat(5, 1fr);
+  gap:8px;
+  max-width:420px;
+  margin-top:14px;
+}
+.oc-cell{
+  aspect-ratio:1/1;
+  border-radius:8px;
+  border:1px solid var(--border2);
+  background:var(--panel2);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  user-select:none;
+  color:var(--text);
+  font-weight:700;
+  transition:transform .08s ease, box-shadow .15s ease;
+}
+.oc-cell:hover{ transform:translateY(-1px); box-shadow:0 0 0 1px var(--accent-light); }
+.oc-cell .oc-pct{ font-size:0.72em; font-weight:600; opacity:0.85; margin-bottom:2px; }
+.oc-cell .oc-mark{ font-size:1.05em; }
+.oc-cell.oc-best{ box-shadow:0 0 0 2px var(--accent-light); }
+.oc-cell.oc-c0{ background:var(--panel2); color:var(--text-dim); }
+.oc-cell.oc-c1{ background:#1d4ed8; color:#fff; }          /* Blue */
+.oc-cell.oc-c2{ background:#0d9488; color:#fff; }          /* Teal */
+.oc-cell.oc-c3{ background:#16a34a; color:#fff; }          /* Green */
+.oc-cell.oc-c4{ background:#ca8a04; color:#111; }          /* Yellow */
+.oc-cell.oc-c5{ background:#ea580c; color:#fff; }          /* Orange */
+.oc-cell.oc-c6{ background:#dc2626; color:#fff; }          /* Red */
+.oc-cell.oc-given{ opacity:0.5; cursor:not-allowed; }
+.oc-cell.oc-disabled{ opacity:0.3; cursor:default; pointer-events:none; }
+.oc-likely-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:var(--panel2);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  padding:8px 12px;
+  font-size:0.9em;
+}
+.oc-likely-row .oc-likely-pct{ color:#f87171; font-weight:700; }
+
 /* Collapsible Sections */
 .collapsible-header{
   background:var(--panel);
@@ -731,6 +779,7 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   <div class="tab" data-tab="colors" onclick="switchTab('colors')">🎨 Colors</div>
   <div class="tab" data-tab="cropper" onclick="switchTab('cropper')">✂️ Cropper</div>
   <div class="tab" data-tab="commands" onclick="switchTab('commands')">📖 Commands</div>
+  <div class="tab" data-tab="ocsolver" onclick="switchTab('ocsolver')">🔮 $oc Solver</div>
 </div>
 
 <!-- ===================== TOAST ===================== -->
@@ -1245,6 +1294,46 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   </div>
 </div>
 
+<!-- ===================== OC SOLVER TAB ===================== -->
+<div class="page" id="page-ocsolver">
+<div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;">
+  <div class="card-panel" style="flex:2 1 480px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div>
+        <h2 class="section-title" style="margin-bottom:2px;">🔮 $oc Solver</h2>
+        <p style="color:var(--text-faint); font-size:0.85em; margin:0;">Clicks used: <span id="ocClicksUsed">0</span> / 5</p>
+      </div>
+      <button class="danger" onclick="resetOcSolver()">↺ Reset</button>
+    </div>
+
+    <div id="ocGrid" class="oc-grid"></div>
+
+    <div class="card-panel" style="margin-top:14px; background:var(--panel2);">
+      <strong style="color:var(--accent-light);">Guide</strong>
+      <p style="color:var(--text-dim); font-size:0.85em; margin:6px 0 0;">
+        Click a cell to cycle through the color the game revealed there:<br>
+        Blue → Teal → Green → Yellow → Orange → Red.<br>
+        Right-click a cell to reset it back to unknown.<br>
+        The percentage in each cell is the solver's current estimate that the treasure is there.
+      </p>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:16px; min-width:260px; flex:1 1 280px;">
+    <div class="card-panel" id="ocRecommendationPanel">
+      <h3 style="font-weight:700; color:var(--accent-light); margin:0 0 10px;">Recommendation</h3>
+      <div id="ocRecommendation" style="font-size:0.95em; line-height:1.7;"></div>
+      <p style="color:var(--text-faint); font-size:0.82em; margin-top:10px;">Possible Red Locations: <span id="ocCandidateCount">24/24</span></p>
+    </div>
+
+    <div class="card-panel">
+      <h3 style="font-weight:700; color:var(--accent-light); margin:0 0 10px;">Likely Red Locations</h3>
+      <div id="ocLikelyList" style="display:flex; flex-direction:column; gap:6px;"></div>
+    </div>
+  </div>
+</div>
+</div>
+
 <script>
 /* =========================================================================
    NOTE FROM USER (workflow preference): I'm using AI to code this, so only
@@ -1534,6 +1623,7 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + name));
   if(name === 'commands') initCommandsTab();
+  if(name === 'ocsolver') initOcSolver();
 }
 
 /* ==================== MUDAE COMMAND DATABASE ==================== */
@@ -5108,6 +5198,215 @@ async function snapshotGrid(which){
 
   btn.textContent = origText;
   btn.disabled = false;
+}
+
+/* =========================================================================
+   $OC SOLVER
+   5x5 grid minigame. Each cell, when revealed, shows a color that encodes
+   its distance/relationship to the hidden treasure ("red") cell:
+     Red    = the target itself
+     Orange = orthogonally adjacent to the target
+     Yellow = diagonally adjacent to the target
+     Green  = same row/column as the target, further away
+     Teal   = the next ring out (distance 2, off-axis)
+     Blue   = everything else
+   The solver tracks which colors have been revealed at which cells,
+   narrows down the set of possible target locations consistent with all
+   revealed colors, and recommends the next click that eliminates the most
+   candidates (maximum expected information gain).
+========================================================================= */
+const OC_SIZE = 5;
+const OC_MAX_CLICKS = 5;
+const OC_COLOR_NAMES = ['?', 'Blue', 'Teal', 'Green', 'Yellow', 'Orange', 'Red'];
+let ocState = new Array(OC_SIZE * OC_SIZE).fill(0); // 0=unknown, 1..6 = color index
+let ocInitialized = false;
+
+function ocIdx(r, c){ return r * OC_SIZE + c; }
+const OC_CENTER = ocIdx(2, 2); // the middle tile is never a valid red location in-game
+
+// Classifies the relationship of a candidate target (tr,tc) to a probed cell (er,ec).
+// Returns a color index 1..6 matching ocState's encoding.
+// Verified against real game screenshots:
+//   Orange = orthogonally adjacent (distance 1, same row or column)
+//   Yellow = anywhere on the diagonal through the target (any distance, both directions)
+//   Green  = anywhere else on the same row/column as the target (distance 2+)
+//   Blue   = off the row/column/diagonal, at the nearest such ring (distance 2)
+//   Teal   = off the row/column/diagonal, further out (distance 3+) — best-effort; unconfirmed
+//            against a real example, since no Teal reveal has been observed yet.
+function ocClassify(tr, tc, er, ec){
+  const dr = Math.abs(tr - er), dc = Math.abs(tc - ec);
+  if(dr === 0 && dc === 0) return 6; // Red - the target itself
+  if((dr === 0 || dc === 0) && Math.max(dr, dc) === 1) return 5; // Orange - orthogonal adjacent
+  if(dr === dc) return 4; // Yellow - on the diagonal, any distance
+  if(dr === 0 || dc === 0) return 3; // Green - same row/col, further away
+  if(Math.max(dr, dc) === 2) return 1; // Blue - off-pattern, nearest ring
+  return 2; // Teal - off-pattern, further ring
+}
+
+function ocClicksUsed(){
+  return ocState.filter(s => s !== 0).length;
+}
+
+// Returns the list of cell indices still consistent with every revealed color.
+// The center tile is never included — it isn't a valid red location in-game.
+function ocGetCandidates(){
+  const candidates = [];
+  for(let tr = 0; tr < OC_SIZE; tr++){
+    for(let tc = 0; tc < OC_SIZE; tc++){
+      const idx = ocIdx(tr, tc);
+      if(idx === OC_CENTER) continue;
+      let ok = true;
+      for(let er = 0; er < OC_SIZE && ok; er++){
+        for(let ec = 0; ec < OC_SIZE && ok; ec++){
+          if(ocIdx(er, ec) === OC_CENTER) continue;
+          const observed = ocState[ocIdx(er, ec)];
+          if(observed === 0) continue;
+          if(ocClassify(tr, tc, er, ec) !== observed) ok = false;
+        }
+      }
+      if(ok) candidates.push(idx);
+    }
+  }
+  return candidates;
+}
+
+// For a candidate target set, finds the unrevealed cell whose click is expected
+// to eliminate the most candidates (minimizes expected remaining set size).
+function ocBestMove(candidates){
+  let best = null;
+  for(let er = 0; er < OC_SIZE; er++){
+    for(let ec = 0; ec < OC_SIZE; ec++){
+      const probeIdx = ocIdx(er, ec);
+      if(probeIdx === OC_CENTER) continue;
+      if(ocState[probeIdx] !== 0) continue;
+      const groups = {};
+      for(const candIdx of candidates){
+        const tr = Math.floor(candIdx / OC_SIZE), tc = candIdx % OC_SIZE;
+        const color = ocClassify(tr, tc, er, ec);
+        groups[color] = (groups[color] || 0) + 1;
+      }
+      let expectedRemaining = 0;
+      for(const k in groups) expectedRemaining += (groups[k] * groups[k]) / candidates.length;
+      const expectedGain = candidates.length - expectedRemaining;
+      if(!best || expectedGain > best.expectedGain){
+        best = { r: er, c: ec, expectedGain };
+      }
+    }
+  }
+  return best;
+}
+
+function ocCellClick(idx){
+  if(idx === OC_CENTER) return; // not a clickable tile in-game
+  if(ocState[idx] === 0 && ocClicksUsed() >= OC_MAX_CLICKS){
+    showToast('Click limit reached (5/5) — reset to try again.', true);
+    return;
+  }
+  ocState[idx] = (ocState[idx] % 6) + 1; // cycle 0->1->2->3->4->5->6->1...
+  ocRenderOcSolver();
+}
+
+function ocCellRightClick(e, idx){
+  e.preventDefault();
+  if(idx === OC_CENTER) return;
+  ocState[idx] = 0;
+  ocRenderOcSolver();
+}
+
+function resetOcSolver(){
+  ocState = new Array(OC_SIZE * OC_SIZE).fill(0);
+  ocRenderOcSolver();
+}
+
+function initOcSolver(){
+  if(!ocInitialized){
+    const grid = document.getElementById('ocGrid');
+    grid.innerHTML = '';
+    for(let r = 0; r < OC_SIZE; r++){
+      for(let c = 0; c < OC_SIZE; c++){
+        const idx = ocIdx(r, c);
+        const cell = document.createElement('div');
+        cell.dataset.idx = idx;
+        if(idx === OC_CENTER){
+          cell.className = 'oc-cell oc-c0 oc-disabled';
+          cell.innerHTML = '<span class="oc-pct">—</span><span class="oc-mark">·</span>';
+        } else {
+          cell.className = 'oc-cell oc-c0';
+          cell.innerHTML = '<span class="oc-pct">4.2%</span><span class="oc-mark">?</span>';
+          cell.addEventListener('click', () => ocCellClick(idx));
+          cell.addEventListener('contextmenu', (e) => ocCellRightClick(e, idx));
+        }
+        grid.appendChild(cell);
+      }
+    }
+    ocInitialized = true;
+  }
+  ocRenderOcSolver();
+}
+
+function ocRenderOcSolver(){
+  const candidates = ocGetCandidates();
+  const candidateSet = new Set(candidates);
+  const clicksUsed = ocClicksUsed();
+  document.getElementById('ocClicksUsed').textContent = clicksUsed;
+  document.getElementById('ocCandidateCount').textContent = `${candidates.length}/24`;
+
+  let bestMove = null;
+  if(candidates.length > 1 && clicksUsed < OC_MAX_CLICKS){
+    bestMove = ocBestMove(candidates);
+  }
+
+  // Render grid
+  const cells = document.querySelectorAll('#ocGrid .oc-cell');
+  cells.forEach(cell => {
+    const idx = Number(cell.dataset.idx);
+    if(idx === OC_CENTER) return; // always disabled, nothing to update
+    const state = ocState[idx];
+    cell.className = 'oc-cell oc-c' + state;
+    const pctEl = cell.querySelector('.oc-pct');
+    const markEl = cell.querySelector('.oc-mark');
+    if(state === 0){
+      if(candidates.length > 0 && candidateSet.has(idx)){
+        pctEl.textContent = (100 / candidates.length).toFixed(1) + '%';
+      } else {
+        pctEl.textContent = '—';
+      }
+      markEl.textContent = '?';
+      cell.classList.toggle('oc-best', !!bestMove && bestMove.r === Math.floor(idx / OC_SIZE) && bestMove.c === idx % OC_SIZE);
+    } else {
+      pctEl.textContent = OC_COLOR_NAMES[state];
+      markEl.textContent = state === 6 ? '★' : '✓';
+      cell.classList.add('oc-given');
+    }
+  });
+
+  // Render recommendation panel
+  const recEl = document.getElementById('ocRecommendation');
+  if(candidates.length === 0){
+    recEl.innerHTML = `<span style="color:#f87171;">No location matches all revealed colors — double-check the colors you entered, or reset.</span>`;
+  } else if(candidates.length === 1){
+    const r = Math.floor(candidates[0] / OC_SIZE) + 1, c = (candidates[0] % OC_SIZE) + 1;
+    recEl.innerHTML = `<strong style="color:#f87171;">Target found: (${r}, ${c})</strong><br><span style="color:var(--text-dim); font-size:0.85em;">Click that cell in-game to claim it.</span>`;
+  } else if(clicksUsed >= OC_MAX_CLICKS){
+    const r = Math.floor(candidates[0] / OC_SIZE) + 1, c = (candidates[0] % OC_SIZE) + 1;
+    recEl.innerHTML = `<strong>No clicks remaining.</strong><br>Best guess: (${r}, ${c})<br><span style="color:var(--text-dim); font-size:0.85em;">${candidates.length} locations are equally likely — guess any of them.</span>`;
+  } else if(bestMove){
+    recEl.innerHTML = `<strong>Next best move: (${bestMove.r + 1}, ${bestMove.c + 1})</strong><br>Expected Gain: ${bestMove.expectedGain.toFixed(2)}`;
+  }
+
+  // Render likely red locations
+  const likelyEl = document.getElementById('ocLikelyList');
+  likelyEl.innerHTML = '';
+  if(candidates.length > 0){
+    const pct = (100 / candidates.length).toFixed(1);
+    candidates.slice(0, 5).forEach(idx => {
+      const r = Math.floor(idx / OC_SIZE) + 1, c = (idx % OC_SIZE) + 1;
+      const row = document.createElement('div');
+      row.className = 'oc-likely-row';
+      row.innerHTML = `<span>Pos: (${r}, ${c})</span><span class="oc-likely-pct">${pct}%</span>`;
+      likelyEl.appendChild(row);
+    });
+  }
 }
 </script>
 </body>

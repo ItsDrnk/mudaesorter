@@ -41,6 +41,8 @@
   --green:#4ade80;
   --red:#dc2626;
   --danger-bg:#991b1b;
+  --card-size:135px;
+  --tile-size:140px;
 }
 *{box-sizing:border-box;}
 body{
@@ -97,6 +99,9 @@ body{
 .topbar button.danger:hover{ background:#b91c1c; }
 .topbar-spacer{flex:1;}
 .topbar-right{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.card-size-control{ display:flex; align-items:center; gap:6px; }
+.card-size-control input[type="range"]{ width:100px; accent-color:var(--accent); }
+.card-size-control .card-size-value{ min-width:34px; text-align:right; color:var(--text-dim); font-size:0.78em; }
 #profileNameTag{
   font-size:0.8em;
   color:var(--text-faint);
@@ -454,8 +459,9 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   cursor:grab;
   position:relative;
   user-select:none;
-  width:140px;
+  width:var(--tile-size, 140px);
   border-radius:6px;
+  transition:width 0.1s;
 }
 .tile img{ width:100%; display:block; border-radius:4px; pointer-events:none; }
 .tile-name{
@@ -597,18 +603,18 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   padding:14px;
 }
 .character-card{
-  width:135px;
+  width:var(--card-size, 135px);
   border-radius:8px;
   overflow:hidden;
   border:2px solid var(--card-color, #670d08);
   cursor:pointer;
   position:relative;
   background:#0d0d12;
-  transition:opacity 0.15s;
+  transition:opacity 0.15s, width 0.1s;
 }
 .character-card.excluded{ opacity:0.35; }
 .character-card.hidden-char{ display:none; }
-.character-card img{ width:100%; height:170px; object-fit:cover; display:block; }
+.character-card img{ width:100%; height:auto; aspect-ratio:135/170; object-fit:cover; display:block; }
 .character-rank-badge{
   position:absolute;
   top:4px;
@@ -794,10 +800,15 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   </div>
   <div class="collapsible-content expanded" style="display:block;">
     <textarea id="sorterInput" rows="6" placeholder="Paste your $mmasi- (or $mmsaty+ri-c+x+ko) output here&#10;&#10;Dungeon Meshi - 36/40&#10;#819 - Marcille Donato  💞 => arczeus | ✨ · ($wa) · :chaoskey:  (10) (#EAC57C) 1,304 ka - https://mudae.net/uploads/5107688/example.gif"></textarea>
-    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
       <button class="btn-primary" onclick="loadFromMudaeInput('replace')">Replace All Characters</button>
       <button onclick="loadFromMudaeInput('merge')">Add New Only (skip duplicates)</button>
       <button class="btn-secondary" onclick="document.getElementById('sorterInput').value=''">Clear Box</button>
+      <button class="btn-secondary" onclick="copyCmdToClipboard('$mmsaty+ri-c+x+ko')" title="Copy the full-data Mudae command to your clipboard">📋 Copy $mmsaty+ri-c+x+ko</button>
+    </div>
+    <div style="margin-top:8px; display:flex; align-items:center; gap:6px; font-size:0.85em; color:var(--text-dim);">
+      <input type="checkbox" id="autoAddOnPaste" checked style="cursor:pointer;">
+      <label for="autoAddOnPaste" style="cursor:pointer;" title="When on, pasting into the box above immediately merges new characters in (skipping duplicates) and clears the box, so you can paste Discord's next DM chunk right on top of it. Useful now that Mudae splits long $mm results into several small DM messages instead of one — copy each message's text, paste, repeat.">⚡ Auto-add on paste (clears box after each paste — handy for Mudae's multi-message DMs)</label>
     </div>
   </div>
 
@@ -836,12 +847,19 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
 
   <hr style="margin:20px 0; border-color:var(--border);">
 
-  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:center;">
     <button onclick="undoGrid()">↶ Undo (Ctrl+Z)</button>
     <button onclick="redoGrid()">↷ Redo (Ctrl+Shift+Z)</button>
     <button class="btn-danger" onclick="clearGalleryCache()">🗑 Clear Image Cache</button>
     <button onclick="snapshotGrid('sorter')" title="Save a PNG image of your sorter tiles">📸 Snapshot Sorter</button>
     <button onclick="openBannerModal()" title="Generate an animated scrolling banner GIF of your characters">🎬 Animated Banner</button>
+    <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
+      <h3 style="font-size:0.85em; color:var(--text-dim); margin:0;">Char Grid Zoom</h3>
+      <div class="card-size-control">
+        <input type="range" id="sorterTileSizeSlider" min="50" max="130" step="1" value="100" oninput="changeSorterTileSize(this.value)">
+        <span class="card-size-value" id="sorterTileSizeValue">100%</span>
+      </div>
+    </div>
   </div>
 
   <div class="grid" id="sorterGrid" style="display:flex; flex-wrap:wrap; gap:12px; align-content:flex-start;"></div>
@@ -907,6 +925,13 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
           <button class="btn-sm" onclick="changeGridColumns(2)" id="grid-btn-2">2</button>
           <button class="btn-sm active" onclick="changeGridColumns(3)" id="grid-btn-3">3</button>
           <button class="btn-sm" onclick="changeGridColumns(4)" id="grid-btn-4">4</button>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">Char Grid Zoom</h3>
+        <div class="card-size-control">
+          <input type="range" id="cardSizeSlider" min="50" max="130" step="1" value="100" oninput="changeCardSize(this.value)">
+          <span class="card-size-value" id="cardSizeValue">100%</span>
         </div>
       </div>
       <div>
@@ -1365,7 +1390,9 @@ function freshProfileData(){
       showDeselected: true,
       showDisabledIcon: true,
       preferredColumns: 3,
-      fitToScreen: false
+      fitToScreen: false,
+      cardSize: 100,
+      sorterTileSize: 100
     },
     preFilterCharacterStates: null
   };
@@ -2776,6 +2803,30 @@ function changeGridColumns(columns){
   saveStore();
 }
 
+function changeCardSize(pct){
+  pct = parseInt(pct, 10) || 67;
+  getData().ui.cardSize = pct;
+  const px = Math.round(135 * (pct / 100));
+  document.documentElement.style.setProperty('--card-size', px + 'px');
+  const valEl = document.getElementById('cardSizeValue');
+  if(valEl) valEl.textContent = pct + '%';
+  const slider = document.getElementById('cardSizeSlider');
+  if(slider && slider.value != pct) slider.value = pct;
+  saveStore();
+}
+
+function changeSorterTileSize(pct){
+  pct = parseInt(pct, 10) || 100;
+  getData().ui.sorterTileSize = pct;
+  const px = Math.round(140 * (pct / 100));
+  document.documentElement.style.setProperty('--tile-size', px + 'px');
+  const valEl = document.getElementById('sorterTileSizeValue');
+  if(valEl) valEl.textContent = pct + '%';
+  const slider = document.getElementById('sorterTileSizeSlider');
+  if(slider && slider.value != pct) slider.value = pct;
+  saveStore();
+}
+
 function toggleDeselectedVisibility(shouldShow){
   getData().ui.showDeselected = shouldShow;
   document.getElementById('deselected-show-btn').classList.toggle('active', shouldShow);
@@ -4164,6 +4215,20 @@ function applyUiStateToControls(){
   document.getElementById('fit-on-btn').classList.toggle('active', ui.fitToScreen);
   document.getElementById('fit-off-btn').classList.toggle('active', !ui.fitToScreen);
   document.body.classList.toggle('fit-width', ui.fitToScreen);
+
+  const cardZoom = ui.cardSize || 100;
+  document.documentElement.style.setProperty('--card-size', Math.round(135 * (cardZoom / 100)) + 'px');
+  const cardSizeSlider = document.getElementById('cardSizeSlider');
+  if(cardSizeSlider) cardSizeSlider.value = cardZoom;
+  const cardSizeValue = document.getElementById('cardSizeValue');
+  if(cardSizeValue) cardSizeValue.textContent = cardZoom + '%';
+
+  const tileZoom = ui.sorterTileSize || 100;
+  document.documentElement.style.setProperty('--tile-size', Math.round(140 * (tileZoom / 100)) + 'px');
+  const sorterTileSizeSlider = document.getElementById('sorterTileSizeSlider');
+  if(sorterTileSizeSlider) sorterTileSizeSlider.value = tileZoom;
+  const sorterTileSizeValue = document.getElementById('sorterTileSizeValue');
+  if(sorterTileSizeValue) sorterTileSizeValue.textContent = tileZoom + '%';
 }
 
 function refreshDataViews(){
@@ -4208,7 +4273,49 @@ window.addEventListener('DOMContentLoaded', function(){
   loadGalleryCache();
   loadStoreFromDisk();
   renderEverything();
+  initAutoAddOnPaste();
 });
+
+
+/* =========================================================================
+   AUTO-ADD ON PASTE
+   Mudae now often splits $mm results into several small DM messages
+   instead of one big channel post. This lets the user copy each DM
+   message's text and paste it straight into the sorter box one after
+   another without manually clicking "Add New Only" and clearing the box
+   every time — each paste is parsed, merged (duplicates skipped), and the
+   box is cleared automatically so it's ready for the next paste.
+   ========================================================================= */
+function initAutoAddOnPaste(){
+  const ta = document.getElementById('sorterInput');
+  const toggle = document.getElementById('autoAddOnPaste');
+  if(!ta) return;
+
+  // restore saved checkbox state (defaults to checked/on if nothing saved yet)
+  if(toggle){
+    try{
+      const saved = localStorage.getItem('mudaeToolkit_autoAddOnPaste');
+      if(saved !== null) toggle.checked = saved === 'true';
+    }catch(e){}
+    toggle.addEventListener('change', () => {
+      try{ localStorage.setItem('mudaeToolkit_autoAddOnPaste', toggle.checked); }catch(e){}
+    });
+  }
+
+  ta.addEventListener('paste', function(){
+    const toggle = document.getElementById('autoAddOnPaste');
+    if(!toggle || !toggle.checked) return;
+    // wait a tick so the pasted text actually lands in the textarea's value first
+    setTimeout(() => {
+      const raw = ta.value.trim();
+      if(!raw) return;
+      const parsed = parseMudaeInput(raw);
+      if(parsed.length === 0) return; // leave unparseable pastes in the box so the user can see/fix them
+      loadFromMudaeInput('merge');
+      ta.value = '';
+    }, 0);
+  });
+}
 
 /* =========================================================================
    COLOR PICKER

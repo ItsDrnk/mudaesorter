@@ -454,7 +454,7 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   cursor:grab;
   position:relative;
   user-select:none;
-  width:140px;
+  width:var(--tile-size, 140px);
   border-radius:6px;
 }
 .tile img{ width:100%; display:block; border-radius:4px; pointer-events:none; }
@@ -847,12 +847,17 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
 
   <hr style="margin:20px 0; border-color:var(--border);">
 
-  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:center;">
     <button onclick="undoGrid()">↶ Undo (Ctrl+Z)</button>
     <button onclick="redoGrid()">↷ Redo (Ctrl+Shift+Z)</button>
     <button class="btn-danger" onclick="clearGalleryCache()">🗑 Clear Image Cache</button>
     <button onclick="snapshotGrid('sorter')" title="Save a PNG image of your sorter tiles">📸 Snapshot Sorter</button>
     <button onclick="openBannerModal()" title="Generate an animated scrolling banner GIF of your characters">🎬 Animated Banner</button>
+    <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+      <label for="tileSizeSlider" style="font-size:0.85em; color:var(--text-dim); white-space:nowrap;">Tile Size</label>
+      <input type="range" id="tileSizeSlider" min="80" max="260" step="10" value="140" oninput="setTileSize(this.value)" style="width:140px;">
+      <span id="tileSizeLabel" style="font-size:0.85em; color:var(--text-faint); min-width:38px;">140px</span>
+    </div>
   </div>
 
   <div class="selection-toolbar" id="selectionToolbar" style="display:none;">
@@ -1380,7 +1385,8 @@ function freshProfileData(){
       showDeselected: true,
       showDisabledIcon: true,
       preferredColumns: 3,
-      fitToScreen: false
+      fitToScreen: false,
+      tileSize: 140
     },
     preFilterCharacterStates: null
   };
@@ -2790,6 +2796,17 @@ function toggleFitToScreen(shouldFit){
   saveStore();
 }
 
+function setTileSize(px){
+  px = Number(px) || 140;
+  getData().ui.tileSize = px;
+  document.documentElement.style.setProperty('--tile-size', px + 'px');
+  const slider = document.getElementById('tileSizeSlider');
+  if(slider) slider.value = px;
+  const label = document.getElementById('tileSizeLabel');
+  if(label) label.textContent = px + 'px';
+  saveStore();
+}
+
 function escapeHTML(str){
   if(typeof str !== 'string') return str;
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
@@ -4154,6 +4171,13 @@ function applyUiStateToControls(){
   document.getElementById('fit-on-btn').classList.toggle('active', ui.fitToScreen);
   document.getElementById('fit-off-btn').classList.toggle('active', !ui.fitToScreen);
   document.body.classList.toggle('fit-width', ui.fitToScreen);
+
+  const tileSize = ui.tileSize || 140;
+  document.documentElement.style.setProperty('--tile-size', tileSize + 'px');
+  const tileSlider = document.getElementById('tileSizeSlider');
+  if(tileSlider) tileSlider.value = tileSize;
+  const tileLabel = document.getElementById('tileSizeLabel');
+  if(tileLabel) tileLabel.textContent = tileSize + 'px';
 }
 
 function refreshDataViews(){

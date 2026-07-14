@@ -41,8 +41,6 @@
   --green:#4ade80;
   --red:#dc2626;
   --danger-bg:#991b1b;
-  --card-size:135px;
-  --tile-size:140px;
 }
 *{box-sizing:border-box;}
 body{
@@ -99,9 +97,6 @@ body{
 .topbar button.danger:hover{ background:#b91c1c; }
 .topbar-spacer{flex:1;}
 .topbar-right{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
-.card-size-control{ display:flex; align-items:center; gap:6px; }
-.card-size-control input[type="range"]{ width:100px; accent-color:var(--accent); }
-.card-size-control .card-size-value{ min-width:34px; text-align:right; color:var(--text-dim); font-size:0.78em; }
 #profileNameTag{
   font-size:0.8em;
   color:var(--text-faint);
@@ -459,9 +454,8 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   cursor:grab;
   position:relative;
   user-select:none;
-  width:var(--tile-size, 140px);
+  width:140px;
   border-radius:6px;
-  transition:width 0.1s;
 }
 .tile img{ width:100%; display:block; border-radius:4px; pointer-events:none; }
 .tile-name{
@@ -501,33 +495,44 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
 }
 .tile:hover .delete-btn{ opacity:1; }
 .delete-btn:hover{ background:#c0392b; color:#fff; }
-.group-container{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  padding:12px;
-  padding-top:28px;
-  border-radius:8px;
-  position:relative;
+.tile.tile-selected{
+  border-color:var(--accent-light);
+  border-width:2px;
+  box-shadow:0 0 0 2px var(--accent-light)40, 0 0 8px var(--accent-light)80;
+  background:var(--accent)22;
 }
-.group-drag-handle{
+.tile-select-check{
   position:absolute;
-  left:0;
-  top:-10px;
+  top:6px;
+  left:6px;
+  width:18px;
   height:18px;
-  cursor:grab;
-  border-radius:5px 5px 0 0;
+  border-radius:4px;
+  border:2px solid var(--text-faint);
+  background:#000c;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:13px;
-  opacity:0.95;
+  font-size:12px;
   font-weight:bold;
-  user-select:none;
-  min-width:max-content;
-  padding:0 8px;
-  white-space:nowrap;
+  cursor:pointer;
+  z-index:2;
+}
+.tile.tile-selected .tile-select-check{
+  border-color:var(--accent-light);
+  background:var(--accent-light);
   color:#0a0a0f;
+}
+.selection-toolbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  background:var(--panel2);
+  border:1px solid var(--accent-light);
+  border-radius:6px;
+  padding:8px 12px;
+  margin-bottom:12px;
 }
 .profile-pill-row{
   background:var(--panel);
@@ -603,18 +608,18 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   padding:14px;
 }
 .character-card{
-  width:var(--card-size, 135px);
+  width:135px;
   border-radius:8px;
   overflow:hidden;
   border:2px solid var(--card-color, #670d08);
   cursor:pointer;
   position:relative;
   background:#0d0d12;
-  transition:opacity 0.15s, width 0.1s;
+  transition:opacity 0.15s;
 }
 .character-card.excluded{ opacity:0.35; }
 .character-card.hidden-char{ display:none; }
-.character-card img{ width:100%; height:auto; aspect-ratio:135/170; object-fit:cover; display:block; }
+.character-card img{ width:100%; height:170px; object-fit:cover; display:block; }
 .character-rank-badge{
   position:absolute;
   top:4px;
@@ -800,34 +805,16 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   </div>
   <div class="collapsible-content expanded" style="display:block;">
     <textarea id="sorterInput" rows="6" placeholder="Paste your $mmasi- (or $mmsaty+ri-c+x+ko) output here&#10;&#10;Dungeon Meshi - 36/40&#10;#819 - Marcille Donato  💞 => arczeus | ✨ · ($wa) · :chaoskey:  (10) (#EAC57C) 1,304 ka - https://mudae.net/uploads/5107688/example.gif"></textarea>
-    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
       <button class="btn-primary" onclick="loadFromMudaeInput('replace')">Replace All Characters</button>
       <button onclick="loadFromMudaeInput('merge')">Add New Only (skip duplicates)</button>
       <button class="btn-secondary" onclick="document.getElementById('sorterInput').value=''">Clear Box</button>
-      <button class="btn-secondary" onclick="copyCmdToClipboard('$mmsaty+ri-c+x+ko')" title="Copy the full-data Mudae command to your clipboard">📋 Copy $mmsaty+ri-c+x+ko</button>
     </div>
-    <div style="margin-top:8px; display:flex; align-items:center; gap:6px; font-size:0.85em; color:var(--text-dim);">
-      <input type="checkbox" id="autoAddOnPaste" checked style="cursor:pointer;">
-      <label for="autoAddOnPaste" style="cursor:pointer;" title="When on, pasting into the box above immediately merges new characters in (skipping duplicates) and clears the box, so you can paste Discord's next DM chunk right on top of it. Useful now that Mudae splits long $mm results into several small DM messages instead of one — copy each message's text, paste, repeat.">⚡ Auto-add on paste (clears box after each paste — handy for Mudae's multi-message DMs)</label>
-    </div>
-  </div>
-
-  <div class="collapsible-header" onclick="toggleCollapsible(this)">
-    <span>▶ Visual Groups</span>
-    <span class="info-icon">i<span class="tooltip">These groups are just for organizing tiles on your screen — they don't get sent to Mudae. Right-click a tile to add it to a group.</span></span>
-  </div>
-  <div class="collapsible-content">
-    <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
-      <input type="text" id="groupNameInput" placeholder="Group name (e.g., rezero)" style="flex:1; min-width:160px;">
-      <input type="color" id="groupColorInput" value="#444444" style="width:50px; height:34px; cursor:pointer; padding:2px;">
-      <button class="btn-primary" onclick="createGroup()">Create Group</button>
-    </div>
-    <div id="groupsContainer" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
   </div>
 
   <div class="collapsible-header" onclick="toggleCollapsible(this)">
     <span>▶ $sortmarry Command</span>
-    <span class="info-icon">i<span class="tooltip">Drag tiles below into your preferred order, then generate <span class="cmd-chip">$sortmarry</span> to reorder your harem in Mudae to match.</span></span>
+    <span class="info-icon">i<span class="tooltip">Drag tiles below into your preferred order, then generate <span class="cmd-chip">$sortmarry</span> to reorder your harem in Mudae to match. Click a tile to select it, Ctrl/Cmd-click or Shift-click to select more, then drag any selected tile to move the whole group together.</span></span>
   </div>
   <div class="collapsible-content">
     <button class="btn-primary" onclick="generateSortCommand()">Generate $sortmarry</button>
@@ -842,26 +829,38 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
   <div class="collapsible-content">
     <div id="ciContainer"></div>
     <div id="ciProgress" style="margin-top:8px; opacity:0.8; font-size:0.9em;"></div>
-    <button class="btn-primary" onclick="copyNextCi()" style="margin-top:6px;">Copy Next $ci (or press "N")</button>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+      <button class="btn-primary" onclick="copyNextCi()">Copy Next $ci (or press "N")</button>
+      <button onclick="downloadCiAhk()">⬇️ Download AHK Script</button>
+      <div class="info-icon" style="width:auto; height:auto; border-radius:6px; padding:4px 8px; font-size:0.8em; font-weight:400; background:var(--panel2); border:1px solid var(--border2); color:var(--text-dim); white-space:nowrap;">
+        ❓ What does this do?
+        <span class="tooltip" style="width:300px; left:0; transform:none; top:130%;">
+          <strong style="color:var(--accent-light);">AutoHotKey v2 Script</strong><br><br>
+          Downloads a <code style="background:#2a2a3a; padding:1px 4px; border-radius:3px;">.ahk</code> file that automatically types and sends each <code style="background:#2a2a3a; padding:1px 4px; border-radius:3px;">$ci</code> command into Discord — one every 3 seconds — so you don't have to paste them all manually.<br><br>
+          <strong style="color:#facc15;">Requires AutoHotkey v2</strong> (free):<br>
+          <span style="color:var(--accent-light);">autohotkey.com/download</span><br><br>
+          Make sure Discord is open and focused before running the script. Move your mouse or press a key to stop it early.
+        </span>
+      </div>
+    </div>
   </div>
 
   <hr style="margin:20px 0; border-color:var(--border);">
 
-  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:center;">
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
     <button onclick="undoGrid()">↶ Undo (Ctrl+Z)</button>
     <button onclick="redoGrid()">↷ Redo (Ctrl+Shift+Z)</button>
     <button class="btn-danger" onclick="clearGalleryCache()">🗑 Clear Image Cache</button>
     <button onclick="snapshotGrid('sorter')" title="Save a PNG image of your sorter tiles">📸 Snapshot Sorter</button>
     <button onclick="openBannerModal()" title="Generate an animated scrolling banner GIF of your characters">🎬 Animated Banner</button>
-    <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
-      <h3 style="font-size:0.85em; color:var(--text-dim); margin:0;">Char Grid Zoom</h3>
-      <div class="card-size-control">
-        <input type="range" id="sorterTileSizeSlider" min="50" max="130" step="1" value="100" oninput="changeSorterTileSize(this.value)">
-        <span class="card-size-value" id="sorterTileSizeValue">100%</span>
-      </div>
-    </div>
   </div>
 
+  <div class="selection-toolbar" id="selectionToolbar" style="display:none;">
+    <span id="selectionCount"></span>
+    <span style="opacity:0.75; font-size:0.85em;">Drag any selected tile to move the group together</span>
+    <button class="btn-danger" onclick="removeSelectedTiles()">🗑 Remove Selected</button>
+    <button class="btn-secondary" onclick="clearTileSelection()">✕ Clear Selection</button>
+  </div>
   <div class="grid" id="sorterGrid" style="display:flex; flex-wrap:wrap; gap:12px; align-content:flex-start;"></div>
 </div>
 
@@ -925,13 +924,6 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
           <button class="btn-sm" onclick="changeGridColumns(2)" id="grid-btn-2">2</button>
           <button class="btn-sm active" onclick="changeGridColumns(3)" id="grid-btn-3">3</button>
           <button class="btn-sm" onclick="changeGridColumns(4)" id="grid-btn-4">4</button>
-        </div>
-      </div>
-      <div>
-        <h3 style="font-size:0.85em; color:var(--text-dim); margin-bottom:6px;">Char Grid Zoom</h3>
-        <div class="card-size-control">
-          <input type="range" id="cardSizeSlider" min="50" max="130" step="1" value="100" oninput="changeCardSize(this.value)">
-          <span class="card-size-value" id="cardSizeValue">100%</span>
         </div>
       </div>
       <div>
@@ -1377,8 +1369,6 @@ button:disabled{ opacity:0.45; cursor:not-allowed; }
 function freshProfileData(){
   return {
     characters: [],       // flat array, shared by Sorter + Noter
-    groups: [],            // Sorter's manual visual groups
-    nextGroupId: 0,
     wishlist: [],
     wishlistBaseline: [],  // snapshot of what's actually on Mudae right now (set on parse / after generating commands). Diffed against `wishlist` to know what changed.
     quickNotes: ['⭐', '✨', '💕', 'uft', '#fefefe', '#000000'],
@@ -1390,9 +1380,7 @@ function freshProfileData(){
       showDeselected: true,
       showDisabledIcon: true,
       preferredColumns: 3,
-      fitToScreen: false,
-      cardSize: 100,
-      sorterTileSize: 100
+      fitToScreen: false
     },
     preFilterCharacterStates: null
   };
@@ -1438,8 +1426,6 @@ function migrateLegacyAutosave(){
     fresh.selectedImages = data.selectedImages || {};
     fresh.wishlist = data.wishlist || [];
     fresh.wishlistBaseline = fresh.wishlist.map(c => ({ name: c.name, star: !!c.star }));
-    fresh.groups = data.groups || [];
-    fresh.nextGroupId = data.nextGroupId || 0;
     const id = 'default';
     Store.profiles = { [id]: { name: 'Default (migrated)', data: fresh } };
     Store.activeProfileId = id;
@@ -2010,25 +1996,15 @@ document.addEventListener('click', (e) => {
   if(menu.classList.contains('show') && !menu.contains(e.target)) hideTileActionMenu();
 });
 function showTileActionMenu(ch, x, y){
-  const data = getData();
   const menu = document.getElementById('tileActionMenu');
   menu.innerHTML = '';
 
-  if(data.groups.length > 0){
-    const label = document.createElement('div');
-    label.className = 'menu-label';
-    label.textContent = 'Add to group';
-    menu.appendChild(label);
-    data.groups.forEach(g => {
-      const b = document.createElement('button');
-      b.textContent = g.name;
-      b.onclick = () => { hideTileActionMenu(); addToGroup(ch.id, g.id); };
-      menu.appendChild(b);
-    });
-    const removeFromGroupBtn = document.createElement('button');
-    removeFromGroupBtn.textContent = 'Remove from group';
-    removeFromGroupBtn.onclick = () => { hideTileActionMenu(); removeFromGroup(ch.id); };
-    menu.appendChild(removeFromGroupBtn);
+  if(selectedTileIds.has(ch.id) && selectedTileIds.size > 1){
+    const removeSelBtn = document.createElement('button');
+    removeSelBtn.className = 'danger-item';
+    removeSelBtn.textContent = `✕ Remove ${selectedTileIds.size} selected characters`;
+    removeSelBtn.onclick = () => { hideTileActionMenu(); removeSelectedTiles(); };
+    menu.appendChild(removeSelBtn);
     menu.appendChild(document.createElement('hr'));
   }
 
@@ -2207,7 +2183,9 @@ function loadFromMudaeInput(mode){
    ========================================================================= */
 
 let draggedCharId = null;
-let draggedGroupId = null;
+let draggedCharIds = null; // set when dragging a multi-tile selection as a block
+let selectedTileIds = new Set(); // transient multi-select state for the sorter grid
+let lastClickedTileId = null;
 let undoStack = [];
 let redoStack = [];
 const MAX_HISTORY = 100;
@@ -2216,7 +2194,6 @@ function captureGridSnapshot(){
   const data = getData();
   return {
     characters: JSON.parse(JSON.stringify(data.characters)),
-    groups: JSON.parse(JSON.stringify(data.groups)),
     selectedImages: JSON.parse(JSON.stringify(data.selectedImages))
   };
 }
@@ -2231,7 +2208,6 @@ function applyGridSnapshot(snapshot){
   if(!snapshot) return;
   const data = getData();
   data.characters = JSON.parse(JSON.stringify(snapshot.characters));
-  data.groups = JSON.parse(JSON.stringify(snapshot.groups));
   data.selectedImages = JSON.parse(JSON.stringify(snapshot.selectedImages));
   saveStore();
   refreshDataViews();
@@ -2252,6 +2228,7 @@ document.addEventListener('keydown', function(e){
   if((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z'){ e.preventDefault(); undoGrid(); }
   if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z'){ e.preventDefault(); redoGrid(); }
   if(e.key.toLowerCase() === 'n'){ copyNextCi(); }
+  if(e.key === 'Escape' && selectedTileIds.size > 0){ clearTileSelection(); }
 });
 
 /* ---- gallery image cache (per-profile would bloat storage; keep global, keyed by name) ---- */
@@ -2274,93 +2251,120 @@ function renderSorterGrid(){
   const grid = document.getElementById('sorterGrid');
   grid.innerHTML = '';
 
+  // drop stale selection ids (e.g. characters removed elsewhere)
+  const liveIds = new Set(data.characters.map(c => c.id));
+  let selectionChanged = false;
+  selectedTileIds.forEach(id => { if(!liveIds.has(id)){ selectedTileIds.delete(id); selectionChanged = true; } });
+  if(selectionChanged) updateSelectionToolbar();
+
   // sort by sortOrder for stable display
   const ordered = data.characters.slice().sort((a,b) => (a.sortOrder||0) - (b.sortOrder||0));
 
-  grid.ondragover = (e) => { if(draggedGroupId !== null){ e.preventDefault(); } };
-  grid.ondrop = (e) => { if(draggedGroupId !== null){ e.preventDefault(); draggedGroupId = null; } };
+  ordered.forEach(ch => grid.appendChild(createTile(ch)));
+  updateSelectionToolbar();
+}
 
-  const byGroup = new Map();
-  const ungrouped = [];
-  ordered.forEach(ch => {
-    const g = getGroupForChar(ch.id);
-    if(g){
-      if(!byGroup.has(g.id)) byGroup.set(g.id, []);
-      byGroup.get(g.id).push(ch);
-    } else {
-      ungrouped.push(ch);
+/* ---- Multi-select ---- */
+function updateSelectionToolbar(){
+  const toolbar = document.getElementById('selectionToolbar');
+  const countEl = document.getElementById('selectionCount');
+  if(!toolbar || !countEl) return;
+  if(selectedTileIds.size > 0){
+    toolbar.style.display = 'flex';
+    countEl.textContent = `${selectedTileIds.size} selected`;
+  } else {
+    toolbar.style.display = 'none';
+  }
+  document.querySelectorAll('#sorterGrid .tile').forEach(t => {
+    t.classList.toggle('tile-selected', selectedTileIds.has(t.dataset.id));
+  });
+}
+
+function clearTileSelection(){
+  selectedTileIds.clear();
+  updateSelectionToolbar();
+}
+
+function removeSelectedTiles(){
+  removeCharactersBulk(Array.from(selectedTileIds));
+}
+
+function handleTileClick(ch, e){
+  const data = getData();
+  const ordered = data.characters.slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+
+  if(e.shiftKey && lastClickedTileId !== null){
+    const fromIdx = ordered.findIndex(c => c.id === lastClickedTileId);
+    const toIdx = ordered.findIndex(c => c.id === ch.id);
+    if(fromIdx !== -1 && toIdx !== -1){
+      const [lo, hi] = fromIdx < toIdx ? [fromIdx, toIdx] : [toIdx, fromIdx];
+      for(let i = lo; i <= hi; i++) selectedTileIds.add(ordered[i].id);
     }
-  });
-
-  data.groups.forEach(group => {
-    const members = byGroup.get(group.id);
-    if(!members) return;
-
-    const container = document.createElement('div');
-    container.className = 'group-container';
-    container.style.background = group.color + '20';
-    container.style.border = `2px solid ${group.color}`;
-
-    const handle = document.createElement('div');
-    handle.className = 'group-drag-handle';
-    handle.textContent = '⋮ ' + group.name;
-    handle.style.background = group.color;
-    handle.draggable = true;
-    handle.ondragstart = () => { draggedGroupId = group.id; };
-    handle.ondragend = () => { draggedGroupId = null; };
-    container.appendChild(handle);
-
-    members.forEach(ch => container.appendChild(createTile(ch)));
-
-    container.ondragover = (e) => { e.preventDefault(); };
-    container.ondrop = (e) => {
-      e.preventDefault();
-      if(draggedGroupId === group.id) return;
-      if(draggedCharId !== null){
-        pushGridState();
-        const movedGroup = getGroupForChar(draggedCharId);
-        if(movedGroup) movedGroup.memberIds = movedGroup.memberIds.filter(id => id !== draggedCharId);
-        if(!group.memberIds.includes(draggedCharId)) group.memberIds.push(draggedCharId);
-        draggedCharId = null;
-        saveStore();
-        renderSorterGrid();
-        renderGroups();
-      }
-    };
-
-    grid.appendChild(container);
-  });
-
-  ungrouped.forEach(ch => grid.appendChild(createTile(ch)));
+  } else if(e.ctrlKey || e.metaKey){
+    if(selectedTileIds.has(ch.id)) selectedTileIds.delete(ch.id);
+    else selectedTileIds.add(ch.id);
+    lastClickedTileId = ch.id;
+  } else {
+    // plain click: if it's the only thing selected, toggle it off; otherwise select just this one
+    if(selectedTileIds.size === 1 && selectedTileIds.has(ch.id)){
+      selectedTileIds.delete(ch.id);
+    } else {
+      selectedTileIds.clear();
+      selectedTileIds.add(ch.id);
+    }
+    lastClickedTileId = ch.id;
+  }
+  updateSelectionToolbar();
 }
 
 function createTile(ch){
   const tile = document.createElement('div');
   tile.className = 'tile';
+  if(selectedTileIds.has(ch.id)) tile.classList.add('tile-selected');
   tile.draggable = true;
   tile.dataset.id = ch.id;
 
-  const group = getGroupForChar(ch.id);
-  if(group){
-    tile.style.borderColor = group.color;
-    tile.style.borderWidth = '2px';
-    tile.style.boxShadow = `0 0 6px ${group.color}40`;
-  }
+  const check = document.createElement('div');
+  check.className = 'tile-select-check';
+  check.textContent = selectedTileIds.has(ch.id) ? '✓' : '';
+  check.title = 'Select for multi-move';
+  check.onclick = (e) => { e.stopPropagation(); handleTileClick(ch, e); };
+  tile.appendChild(check);
 
-  tile.ondragstart = () => { pushGridState(); draggedCharId = ch.id; };
+  tile.onclick = (e) => { handleTileClick(ch, e); };
+
+  tile.ondragstart = () => {
+    pushGridState();
+    if(selectedTileIds.has(ch.id) && selectedTileIds.size > 1){
+      // dragging a selected tile moves the whole selection as a block
+      const data = getData();
+      const ordered = data.characters.slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+      draggedCharIds = ordered.filter(c => selectedTileIds.has(c.id)).map(c => c.id);
+    } else {
+      selectedTileIds.clear();
+      selectedTileIds.add(ch.id);
+      lastClickedTileId = ch.id;
+      draggedCharIds = [ch.id];
+      updateSelectionToolbar();
+    }
+    draggedCharId = ch.id;
+  };
   tile.ondragover = (e) => { e.preventDefault(); };
   tile.ondrop = (e) => {
     e.preventDefault();
-    if(draggedCharId === null || draggedCharId === ch.id) return;
+    if(!draggedCharIds || draggedCharIds.length === 0) return;
+    if(draggedCharIds.includes(ch.id)) return; // dropped on one of the dragged tiles itself
     const data = getData();
     const ordered = data.characters.slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
-    const fromIdx = ordered.findIndex(c => c.id === draggedCharId);
-    const toIdx = ordered.findIndex(c => c.id === ch.id);
-    if(fromIdx === -1 || toIdx === -1) return;
-    const moved = ordered.splice(fromIdx, 1)[0];
-    ordered.splice(toIdx, 0, moved);
-    ordered.forEach((c, i) => c.sortOrder = i);
+    const draggedSet = new Set(draggedCharIds);
+    const draggedChars = draggedCharIds.map(id => ordered.find(c => c.id === id)).filter(Boolean);
+    const remaining = ordered.filter(c => !draggedSet.has(c.id));
+    let toIdx = remaining.findIndex(c => c.id === ch.id);
+    if(toIdx === -1) toIdx = remaining.length;
+    remaining.splice(toIdx, 0, ...draggedChars);
+    remaining.forEach((c, i) => c.sortOrder = i);
     draggedCharId = null;
+    draggedCharIds = null;
     saveStore();
     renderSorterGrid();
   };
@@ -2408,7 +2412,7 @@ function removeCharacter(charId){
     if(!ok) return;
     pushGridState();
     data.characters = data.characters.filter(c => c.id !== charId);
-    data.groups.forEach(g => { g.memberIds = g.memberIds.filter(id => id !== charId); });
+    selectedTileIds.delete(charId);
     saveStore();
     refreshDataViews();
     showToast(`Removed "${ch.name}"`);
@@ -2423,91 +2427,10 @@ function removeCharactersBulk(charIds){
     pushGridState();
     const idSet = new Set(charIds);
     data.characters = data.characters.filter(c => !idSet.has(c.id));
-    data.groups.forEach(g => { g.memberIds = g.memberIds.filter(id => !idSet.has(id)); });
+    idSet.forEach(id => selectedTileIds.delete(id));
     saveStore();
     refreshDataViews();
     showToast(`Removed ${charIds.length} character${charIds.length!==1?'s':''}`);
-  });
-}
-
-function getGroupForChar(charId){
-  return getData().groups.find(g => g.memberIds.includes(charId));
-}
-function addToGroup(charId, groupId){
-  const data = getData();
-  const group = data.groups.find(g => g.id === groupId);
-  if(!group) return;
-  pushGridState();
-  data.groups.forEach(g => { g.memberIds = g.memberIds.filter(id => id !== charId); });
-  if(!group.memberIds.includes(charId)) group.memberIds.push(charId);
-  saveStore();
-  renderSorterGrid();
-  renderGroups();
-}
-function removeFromGroup(charId){
-  pushGridState();
-  getData().groups.forEach(g => { g.memberIds = g.memberIds.filter(id => id !== charId); });
-  saveStore();
-  renderSorterGrid();
-  renderGroups();
-}
-
-function createGroup(){
-  const nameInput = document.getElementById('groupNameInput');
-  const colorInput = document.getElementById('groupColorInput');
-  const name = nameInput.value.trim();
-  if(!name){ showToast('Enter a group name', true); return; }
-  pushGridState();
-  const data = getData();
-  data.groups.push({ id: data.nextGroupId++, name, color: colorInput.value, memberIds: [] });
-  nameInput.value = '';
-  colorInput.value = '#444444';
-  saveStore();
-  renderGroups();
-}
-
-function renderGroups(){
-  const data = getData();
-  const container = document.getElementById('groupsContainer');
-  container.innerHTML = '';
-  data.groups.forEach(group => {
-    const div = document.createElement('div');
-    div.style.cssText = `background:${group.color}40; border:2px solid ${group.color}; border-radius:6px; padding:8px 12px; display:flex; align-items:center; gap:8px;`;
-
-    const label = document.createElement('span');
-    label.textContent = `${group.name} (${group.memberIds.length})`;
-    label.style.cssText = 'flex:1; font-weight:bold;';
-
-    const colorBtn = document.createElement('button');
-    colorBtn.textContent = '🎨';
-    colorBtn.className = 'btn-sm';
-    colorBtn.onclick = () => {
-      showPrompt('Enter color (hex):', group.color).then(newColor => {
-        if(newColor){
-          pushGridState();
-          group.color = newColor;
-          saveStore();
-          renderGroups();
-          renderSorterGrid();
-        }
-      });
-    };
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = '✕';
-    deleteBtn.className = 'btn-sm btn-danger';
-    deleteBtn.onclick = () => {
-      pushGridState();
-      data.groups = data.groups.filter(g => g.id !== group.id);
-      saveStore();
-      renderGroups();
-      renderSorterGrid();
-    };
-
-    div.appendChild(label);
-    div.appendChild(colorBtn);
-    div.appendChild(deleteBtn);
-    container.appendChild(div);
   });
 }
 
@@ -2572,6 +2495,46 @@ function highlightCurrentCi(){
 }
 function updateCiProgress(){
   document.getElementById('ciProgress').textContent = `Progress: ${ciIndex} / ${ciList.length}`;
+}
+
+function downloadCiAhk(){
+  if(!ciList.length){ showToast('Generate $sortmarry first (this builds the $ci list too)', true); return; }
+  const cmdLines = ciList.map(c => `  "${c.replace(/"/g, '\\"')}",`).join('\n');
+  const script = `#Requires AutoHotkey v2.0
+
+InstallMouseHook()
+InstallKeybdHook()
+
+commandList := [
+${cmdLines}
+]
+
+if not WinExist("Discord") {
+  MsgBox("Discord not found, exiting")
+  return
+}
+
+WinActivate()
+sleep(2000)
+
+Ptime := A_TimeIdlePhysical
+Ktime := A_TimeIdleKeyboard
+Mtime := A_TimeIdleMouse
+for command in commandList {
+  if A_TimeIdlePhysical < Ptime or A_TimeIdleKeyboard < Ktime or A_TimeIdleMouse < Mtime {
+    Break
+  }
+  SendText(command)
+  Send("{Enter}")
+  sleep(3000)
+}
+`;
+  const blob = new Blob([script], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mudae-ci-images.ahk';
+  a.click();
+  showToast('Downloaded mudae-ci-images.ahk');
 }
 
 /* ---- Gallery ---- */
@@ -2800,30 +2763,6 @@ function changeGridColumns(columns){
   const activeBtn = document.getElementById(`grid-btn-${columns}`);
   if(activeBtn) activeBtn.classList.add('active');
   getData().ui.preferredColumns = columns;
-  saveStore();
-}
-
-function changeCardSize(pct){
-  pct = parseInt(pct, 10) || 67;
-  getData().ui.cardSize = pct;
-  const px = Math.round(135 * (pct / 100));
-  document.documentElement.style.setProperty('--card-size', px + 'px');
-  const valEl = document.getElementById('cardSizeValue');
-  if(valEl) valEl.textContent = pct + '%';
-  const slider = document.getElementById('cardSizeSlider');
-  if(slider && slider.value != pct) slider.value = pct;
-  saveStore();
-}
-
-function changeSorterTileSize(pct){
-  pct = parseInt(pct, 10) || 100;
-  getData().ui.sorterTileSize = pct;
-  const px = Math.round(140 * (pct / 100));
-  document.documentElement.style.setProperty('--tile-size', px + 'px');
-  const valEl = document.getElementById('sorterTileSizeValue');
-  if(valEl) valEl.textContent = pct + '%';
-  const slider = document.getElementById('sorterTileSizeSlider');
-  if(slider && slider.value != pct) slider.value = pct;
   saveStore();
 }
 
@@ -4215,25 +4154,10 @@ function applyUiStateToControls(){
   document.getElementById('fit-on-btn').classList.toggle('active', ui.fitToScreen);
   document.getElementById('fit-off-btn').classList.toggle('active', !ui.fitToScreen);
   document.body.classList.toggle('fit-width', ui.fitToScreen);
-
-  const cardZoom = ui.cardSize || 100;
-  document.documentElement.style.setProperty('--card-size', Math.round(135 * (cardZoom / 100)) + 'px');
-  const cardSizeSlider = document.getElementById('cardSizeSlider');
-  if(cardSizeSlider) cardSizeSlider.value = cardZoom;
-  const cardSizeValue = document.getElementById('cardSizeValue');
-  if(cardSizeValue) cardSizeValue.textContent = cardZoom + '%';
-
-  const tileZoom = ui.sorterTileSize || 100;
-  document.documentElement.style.setProperty('--tile-size', Math.round(140 * (tileZoom / 100)) + 'px');
-  const sorterTileSizeSlider = document.getElementById('sorterTileSizeSlider');
-  if(sorterTileSizeSlider) sorterTileSizeSlider.value = tileZoom;
-  const sorterTileSizeValue = document.getElementById('sorterTileSizeValue');
-  if(sorterTileSizeValue) sorterTileSizeValue.textContent = tileZoom + '%';
 }
 
 function refreshDataViews(){
   renderSorterGrid();
-  renderGroups();
 
   const hasChars = getData().characters.length > 0;
   document.getElementById('generateNoteBtn').disabled = !hasChars;
@@ -4273,49 +4197,7 @@ window.addEventListener('DOMContentLoaded', function(){
   loadGalleryCache();
   loadStoreFromDisk();
   renderEverything();
-  initAutoAddOnPaste();
 });
-
-
-/* =========================================================================
-   AUTO-ADD ON PASTE
-   Mudae now often splits $mm results into several small DM messages
-   instead of one big channel post. This lets the user copy each DM
-   message's text and paste it straight into the sorter box one after
-   another without manually clicking "Add New Only" and clearing the box
-   every time — each paste is parsed, merged (duplicates skipped), and the
-   box is cleared automatically so it's ready for the next paste.
-   ========================================================================= */
-function initAutoAddOnPaste(){
-  const ta = document.getElementById('sorterInput');
-  const toggle = document.getElementById('autoAddOnPaste');
-  if(!ta) return;
-
-  // restore saved checkbox state (defaults to checked/on if nothing saved yet)
-  if(toggle){
-    try{
-      const saved = localStorage.getItem('mudaeToolkit_autoAddOnPaste');
-      if(saved !== null) toggle.checked = saved === 'true';
-    }catch(e){}
-    toggle.addEventListener('change', () => {
-      try{ localStorage.setItem('mudaeToolkit_autoAddOnPaste', toggle.checked); }catch(e){}
-    });
-  }
-
-  ta.addEventListener('paste', function(){
-    const toggle = document.getElementById('autoAddOnPaste');
-    if(!toggle || !toggle.checked) return;
-    // wait a tick so the pasted text actually lands in the textarea's value first
-    setTimeout(() => {
-      const raw = ta.value.trim();
-      if(!raw) return;
-      const parsed = parseMudaeInput(raw);
-      if(parsed.length === 0) return; // leave unparseable pastes in the box so the user can see/fix them
-      loadFromMudaeInput('merge');
-      ta.value = '';
-    }, 0);
-  });
-}
 
 /* =========================================================================
    COLOR PICKER
